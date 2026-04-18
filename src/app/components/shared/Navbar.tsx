@@ -19,6 +19,11 @@ export const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false)
     const [loading, setLoading] = useState(true)
 
+    // Mỗi khi pathname thay đổi (chuyển trang), đóng menu ngay lập tức
+    useEffect(() => {
+        setIsOpen(false)
+    }, [pathname])
+
     useEffect(() => {
         async function getAuthAndProfile() {
             // 1. Lấy user đang đăng nhập
@@ -115,7 +120,8 @@ export const Navbar = () => {
                         {user ? (
                             <div className="flex items-center gap-3">
                                 {/* Chat & Notification Icons */}
-                                <div className="hidden sm:flex items-center gap-1">
+                                {/* <div className="hidden sm:flex items-center gap-1"> */}
+                                <div className="flex items-center gap-1">
                                     <Link href="/chat" className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition relative">
                                         <MessageSquare size={22} />
                                         <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
@@ -174,6 +180,21 @@ export const Navbar = () => {
                             {item.label}
                         </Link>
                     ))}
+                    {user ? (
+                        <button onClick={handleLogout} className="w-full text-left px-4 py-3 rounded-xl text-red-500 font-bold hover:bg-red-50">
+                            Đăng xuất
+                        </button>
+                    ) : (
+                        <div className="space-y-2">
+                            <Link href="/auth/login" className="block px-4 py-3 rounded-xl text-gray-700 font-bold hover:bg-violet-50">
+                                Đăng nhập
+                            </Link>
+                            <Link href="/auth/register" className="block px-4 py-3 rounded-xl text-gray-700 font-bold hover:bg-violet-50">
+                                Đăng ký
+                            </Link>
+                        </div>
+                    )}
+
                 </div>
             )}
         </nav>
