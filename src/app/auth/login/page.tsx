@@ -65,11 +65,11 @@ export default function LoginPage() {
       <div className="max-w-md w-full bg-white rounded-4xl shadow-xl p-8 border border-gray-100">
 
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-linear-to-r from-violet-600 to-cyan-500 rounded-2xl mx-auto mb-4 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+          <div className="w-16 h-16 bg-linear-to-br from-violet-600 to-cyan-500 rounded-2xl mx-auto mb-4 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
             {step === 'login' ? 'F' : <ShieldCheck size={32} />}
           </div>
           <h2 className="text-2xl font-bold text-slate-900">{step === 'login' ? "Đăng nhập" : "Xác thực OTP"}</h2>
-          <p className="text-slate-500 text-sm mt-1">{step === 'login' ? "Chào mừng bạn trở lại" : `Mã đã gửi đến email của bạn`}</p>
+          <p className="text-gray-500 text-sm mt-1">{step === 'login' ? "Chào mừng bạn trở lại" : `Mã đã gửi đến email của bạn`}</p>
         </div>
 
         {message.text && (
@@ -106,7 +106,7 @@ export default function LoginPage() {
             </div>
 
             <div className="text-right px-1">
-              <Link href="/auth/forgotpw" className="text-sm font-bold text-violet-600 hover:text-cyan-500 transition-colors hover:underline">
+              <Link href="/auth/forgotPassword" className="text-sm font-bold text-violet-600 hover:text-cyan-500 transition-colors hover:underline">
                 Quên mật khẩu?
               </Link>
             </div>

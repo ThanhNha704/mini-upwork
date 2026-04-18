@@ -1,4 +1,5 @@
 'use client'
+
 import { useState } from 'react'
 import { createClient } from '@/src/utils/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -30,11 +31,11 @@ export default function ForgotPassword() {
 
       <div className="bg-white/10 p-8 rounded-2xl w-full max-w-md shadow-2xl border border-white/20">
         <h2 className="text-3xl font-bold mb-6 text-center">Quên Mật Khẩu</h2>
-        <p className="text-sm text-gray-200 mb-6 text-center">Nhập email để nhận mã OTP khôi phục.</p>
+        <p className="text-sm text-gray-500 mb-6 text-center">Nhập email để nhận mã OTP khôi phục.</p>
         <form onSubmit={handleSendOtp} className="flex flex-col gap-5">
           <input type="email" placeholder="Địa chỉ Email" required value={email} onChange={e => setEmail(e.target.value)}
-            className="p-3 rounded-lg bg-white/20 border border-white/10 outline-none text-white placeholder:text-gray-200 focus:bg-white/30 transition" />
-          <button type="submit" disabled={loading} className="bg-cyan-500 hover:bg-cyan-600 text-white p-3 rounded-lg font-bold transition shadow-lg disabled:opacity-50">
+            className="p-3 rounded-lg bg-white/20 border border-black/10 outline-none text-black placeholder:text-gray-300 focus:bg-white/30 transition" />
+          <button type="submit" disabled={loading} className="w-full py-4 bg-linear-to-r from-violet-600 to-cyan-500 text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:opacity-90 transition-all disabled:opacity-50">
             {loading ? 'Đang gửi...' : 'Gửi mã OTP'}
           </button>
         </form>

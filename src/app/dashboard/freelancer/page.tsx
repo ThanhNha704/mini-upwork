@@ -1,6 +1,7 @@
 import { Briefcase, CheckCircle, Clock, DollarSign } from "lucide-react";
 
 export default function FreelancerDashboard() {
+
   const stats = [
     { label: "Việc đã apply", value: "12", icon: <Briefcase />, color: "text-blue-600" },
     { label: "Đang thực hiện", value: "03", icon: <Clock />, color: "text-amber-600" },

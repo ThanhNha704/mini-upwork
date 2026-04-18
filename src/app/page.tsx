@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/src/utils/supabase/server"; // Lưu ý: Dùng bản cho server
 
-import { Hero } from "@/src/app/components/home/Hero";
-import { Stats } from "@/src/app/components/home/Stats";
-import { Categories } from "@/src/app/components/home/Categories";
-import { FeaturedFreelancers } from "@/src/app/components/home/FeaturedFreelancers";
+import { Hero } from "@/src/app/home/Hero";
+import { Stats } from "@/src/app/home/Stats";
+import { Categories } from "@/src/app/home/Categories";
+import { FeaturedFreelancers } from "@/src/app/home/FeaturedFreelancers";
 
 export default async function Home() {
   // 1. Khởi tạo Supabase client (Server Side)

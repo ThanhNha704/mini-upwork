@@ -69,18 +69,18 @@ export const Navbar = () => {
         FREELANCER: [
             { label: "Tổng quan", href: "/dashboard/freelancer", icon: <Briefcase size={18} /> },
             { label: "Tìm việc", href: "/jobs", icon: <Briefcase size={18} /> },
-            { label: "Việc đã apply", href: "/dashboard/applications" },
-            { label: "Thu nhập", href: "/dashboard/earnings" },
+            { label: "Việc đã apply", href: "/dashboard/freelancer/applications" },
+            { label: "Thu nhập", href: "/dashboard/freelancer/earnings" },
         ],
         CLIENT: [
             { label: "Quản lý dự án", href: "/dashboard/client/manage-jobs" },
-            { label: "Đăng dự án", href: "/jobs/create", icon: <PlusCircle size={18} /> },
+            { label: "Đăng dự án", href: "/dashboard/client/post-job", icon: <PlusCircle size={18} /> },
             { label: "Tìm Freelancer", href: "/talent" },
         ]
     };
 
     const activeLinks = !user ? navLinks.GUEST : (profile?.role === 'CLIENT' ? navLinks.CLIENT : navLinks.FREELANCER)
-    const bgGradient = "bg-linear-to-r from-violet-600 to-cyan-500"
+    const bgGradient = "bg-linear-to-br from-violet-600 to-cyan-500"
     const textGradient = "bg-linear-to-br from-violet-600 to-cyan-500 bg-clip-text text-transparent"
 
     return (
@@ -131,14 +131,21 @@ export const Navbar = () => {
                                     <p className="text-[10px] font-bold text-violet-500 mt-1 uppercase tracking-widest">{profile?.role || 'Thành viên'}</p>
                                 </div>
 
-                                {/* Avatar */}
-                                <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center">
+                                {/* Avatar Link */}
+                                <Link
+                                    href={`/dashboard/${profile?.role?.toLowerCase() || 'freelancer'}/profile`}
+                                    className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center hover:ring-2 hover:ring-violet-500 transition-all"
+                                >
                                     {profile?.avatar_url ? (
-                                        <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                                        <img
+                                            src={profile.avatar_url}
+                                            alt="Avatar"
+                                            className="w-full h-full object-cover"
+                                        />
                                     ) : (
                                         <UserIcon size={20} className="text-gray-400" />
                                     )}
-                                </div>
+                                </Link>
 
                                 <button onClick={handleLogout} className="p-2 text-gray-400 hover:text-red-500 transition-all">
                                     <LogOut size={20} />
