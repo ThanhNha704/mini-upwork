@@ -1,321 +1,199 @@
 "use client";
+import { useState, useEffect, useCallback } from "react";
+import { createClient } from "@/src/utils/supabase/client";
+import { Search, MapPin, CheckCircle, Star, Filter, ChevronDown, Loader2 } from "lucide-react";
 
-import { useState } from "react";
-import {
-  User,
-  Briefcase,
-  MessageSquare,
-  CreditCard,
-  CheckCircle,
-  ArrowRight,
-  Star,
-  Users,
-  FileText,
-  Search,
-  PlusCircle,
-  TrendingUp,
-  Shield,
-  Clock,
-  Award,
-  HelpCircle,
-  ChevronDown,
-  ChevronUp
-} from "lucide-react";
+export default function FindTalentPage() {
+  const [freelancers, setFreelancers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
 
-export default function GuidePage() {
-  const [activeTab, setActiveTab] = useState("client");
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  // States cho bộ lọc và sắp xếp
+  const [selectedSkill, setSelectedSkill] = useState("Tất cả");
+  const [priceRange, setPriceRange] = useState(100);
+  const [sortBy, setSortBy] = useState("newest");
+  const [showSortMenu, setShowSortMenu] = useState(false);
 
   const bgGradient = "bg-linear-to-r from-violet-600 to-cyan-500";
-  const textGradient = "bg-linear-to-r from-violet-600 to-cyan-500 bg-clip-text text-transparent";
 
-  const toggleSection = (sectionId: string) => {
-    setExpandedSection(expandedSection === sectionId ? null : sectionId);
-  };
-
-  const clientSteps = [
-    {
-      id: "register",
-      icon: <User className="w-8 h-8" />,
-      title: "Đăng ký tài khoản Client",
-      description: "Tạo tài khoản để đăng dự án và thuê freelancer",
-      steps: [
-        "Truy cập trang đăng ký và chọn vai trò 'Client'",
-        "Điền thông tin cá nhân và xác nhận email",
-        "Hoàn tất đăng ký và đăng nhập vào hệ thống"
-      ]
-    },
-    {
-      id: "post-job",
-      icon: <PlusCircle className="w-8 h-8" />,
-      title: "Đăng dự án",
-      description: "Tạo và đăng tải dự án của bạn",
-      steps: [
-        "Nhấn 'Đăng dự án mới' từ menu chính",
-        "Điền thông tin chi tiết: tiêu đề, mô tả, ngân sách",
-        "Xem lại và đăng tải dự án lên nền tảng"
-      ]
-    },
-    {
-      id: "review-apps",
-      icon: <FileText className="w-8 h-8" />,
-      title: "Xem hồ sơ ứng tuyển",
-      description: "Đánh giá và chọn freelancer phù hợp",
-      steps: [
-        "Truy cập 'Quản lý dự án' để xem danh sách ứng viên",
-        "Xem hồ sơ, kinh nghiệm và đề xuất giá của freelancer",
-        "Liên hệ qua chat để trao đổi chi tiết"
-      ]
-    },
-    {
-      id: "hire",
-      icon: <CheckCircle className="w-8 h-8" />,
-      title: "Thuê freelancer",
-      description: "Chọn và thuê freelancer cho dự án",
-      steps: [
-        "Chọn freelancer phù hợp từ danh sách ứng viên",
-        "Thanh toán qua Stripe để bắt đầu dự án",
-        "Theo dõi tiến độ và giao tiếp qua chat"
-      ]
+  // Hàm fetch chính - Dùng useCallback để tránh tạo lại hàm liên tục
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    // Cấu trúc truy vấn với join bảng skills
+    let selectString = "*, freelancer_skills (skills (name))";
+    // Nếu có filter kỹ năng, ta cần join inner để chỉ lấy freelancer có kỹ năng đó
+    if (selectedSkill !== "Tất cả") {
+      selectString = "*, freelancer_skills!inner (skills!inner (name))";
     }
-  ];
+    let query = supabase
+      .from("users")
+      .select(selectString)
+      .eq("role", "FREELANCER");
 
-  const freelancerSteps = [
-    {
-      id: "register-freelancer",
-      icon: <User className="w-8 h-8" />,
-      title: "Đăng ký tài khoản Freelancer",
-      description: "Tạo tài khoản để nhận việc freelance",
-      steps: [
-        "Truy cập trang đăng ký và chọn vai trò 'Freelancer'",
-        "Điền thông tin cá nhân và kỹ năng chuyên môn",
-        "Hoàn tất đăng ký và cập nhật hồ sơ cá nhân"
-      ]
-    },
-    {
-      id: "find-jobs",
-      icon: <Search className="w-8 h-8" />,
-      title: "Tìm việc làm",
-      description: "Khám phá các dự án phù hợp với kỹ năng",
-      steps: [
-        "Truy cập trang 'Tìm việc làm' để xem danh sách dự án",
-        "Sử dụng bộ lọc để tìm dự án phù hợp với kỹ năng",
-        "Đọc kỹ mô tả dự án và yêu cầu của client"
-      ]
-    },
-    {
-      id: "apply",
-      icon: <Briefcase className="w-8 h-8" />,
-      title: "Ứng tuyển dự án",
-      description: "Gửi hồ sơ ứng tuyển cho dự án",
-      steps: [
-        "Nhấn 'Xem chi tiết' để đọc thông tin dự án",
-        "Điền đề xuất giá và lời nhắn gửi client",
-        "Gửi hồ sơ và theo dõi trạng thái ứng tuyển"
-      ]
-    },
-    {
-      id: "work",
-      icon: <TrendingUp className="w-8 h-8" />,
-      title: "Thực hiện dự án",
-      description: "Hoàn thành công việc và nhận thanh toán",
-      steps: [
-        "Giao tiếp với client qua hệ thống chat",
-        "Hoàn thành công việc theo yêu cầu và deadline",
-        "Nhận thanh toán tự động sau khi hoàn thành"
-      ]
+    // 2. Lọc theo Kỹ năng (SỬA Ở ĐÂY)
+    if (selectedSkill !== "Tất cả") {
+      query = query.eq('freelancer_skills.skills.name', selectedSkill);
     }
-  ];
+    query = query.lte('price', priceRange);
 
-  const features = [
-    {
-      icon: <Shield className="w-6 h-6" />,
-      title: "Bảo mật & An toàn",
-      description: "Hệ thống thanh toán an toàn với Stripe, bảo vệ thông tin cá nhân"
-    },
-    {
-      icon: <MessageSquare className="w-6 h-6" />,
-      title: "Chat thời gian thực",
-      description: "Giao tiếp trực tiếp với client/freelancer qua hệ thống chat tích hợp"
-    },
-    {
-      icon: <Clock className="w-6 h-6" />,
-      title: "Quản lý thời gian",
-      description: "Theo dõi deadline, tiến độ dự án và lịch sử làm việc"
-    },
-    {
-      icon: <Award className="w-6 h-6" />,
-      title: "Đánh giá & Uy tín",
-      description: "Hệ thống đánh giá giúp xây dựng uy tín và tìm đối tác phù hợp"
-    }
-  ];
+    // 4. Sắp xếp
+    if (sortBy === "price-asc") query = query.order('price', { ascending: true });
+    else if (sortBy === "price-desc") query = query.order('price', { ascending: false });
+    else if (sortBy === "rating") query = query.order('rating', { ascending: false });
+    else query = query.order('created_at', { ascending: false });
 
-  const faqs = [
-    {
-      question: "Phí dịch vụ của FreelanceHub là bao nhiêu?",
-      answer: "FreelanceHub hoàn toàn miễn phí cho freelancer. Client chỉ trả phí khi thuê freelancer thành công."
-    },
-    {
-      question: "Thanh toán được thực hiện như thế nào?",
-      answer: "Chúng tôi sử dụng Stripe để xử lý thanh toán an toàn. Tiền được giữ trong tài khoản escrow cho đến khi dự án hoàn thành."
-    },
-    {
-      question: "Tôi có thể hủy dự án sau khi đã thuê freelancer không?",
-      answer: "Có thể hủy dự án theo chính sách của chúng tôi. Vui lòng liên hệ hỗ trợ để được giải quyết."
-    },
-    {
-      question: "Làm thế nào để liên hệ hỗ trợ?",
-      answer: "Bạn có thể liên hệ chúng tôi qua email support@freelancehub.com hoặc chat trực tiếp trên nền tảng."
+    const { data, error } = await query;
+    console.log("Executed query:", query);
+    console.log("Query result:", data, "Error:", error);
+    console.log("Applied filters - Skill:", selectedSkill, "Price Range:", priceRange, "Sort By:", sortBy);
+
+    if (!error) {
+      setFreelancers(data || []);
+    } else {
+      console.error("Lỗi truy vấn:", error.message);
     }
-  ];
+    setLoading(false);
+  }, [selectedSkill, priceRange, sortBy, supabase]);
+
+  // Gọi hàm loadData mỗi khi bộ lọc thay đổi
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Hero Section */}
-      <section className={`w-full h-64 ${bgGradient} flex flex-col items-center justify-center text-white px-4 text-center`}>
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight uppercase">
-          Hướng dẫn sử dụng
-        </h1>
-        <p className="text-lg opacity-90 font-medium max-w-2xl">
-          Hướng dẫn chi tiết cách sử dụng FreelanceHub cho cả Client và Freelancer
-        </p>
-      </section>
+    <div className="min-h-screen bg-[#F8FAFC] font-sans antialiased text-slate-900">
+      {/* 1. HERO SECTION */}
+      <div className={`w-full h-64 ${bgGradient} flex flex-col items-center justify-center text-white px-4 text-center`}>
+        <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight uppercase">Tìm kiếm tài năng</h1>
+        <p className="text-lg opacity-90 font-medium max-w-2xl">Kết nối với những chuyên gia hàng đầu để bứt phá dự án</p>
+      </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-12">
-        {/* Tab Navigation */}
-        <div className="flex justify-center mb-12">
-          <div className="bg-white rounded-2xl p-2 shadow-lg border border-slate-200">
-            <button
-              onClick={() => setActiveTab("client")}
-              className={`px-8 py-3 rounded-xl font-bold transition-all ${
-                activeTab === "client"
-                  ? `${bgGradient} text-white shadow-md`
-                  : "text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              <Users className="w-5 h-5 inline mr-2" />
-              Cho Client
-            </button>
-            <button
-              onClick={() => setActiveTab("freelancer")}
-              className={`px-8 py-3 rounded-xl font-bold transition-all ${
-                activeTab === "freelancer"
-                  ? `${bgGradient} text-white shadow-md`
-                  : "text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              <Briefcase className="w-5 h-5 inline mr-2" />
-              Cho Freelancer
-            </button>
-          </div>
-        </div>
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="flex flex-col lg:flex-row gap-10">
 
-        {/* Steps Section */}
-        <div className="space-y-6 mb-16">
-          {(activeTab === "client" ? clientSteps : freelancerSteps).map((step, index) => (
-            <div key={step.id} className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200">
-              <div className="flex items-start gap-6">
-                <div className={`w-16 h-16 ${bgGradient} rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0`}>
-                  {step.icon}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-4 mb-4">
-                    <h3 className="text-2xl font-bold text-slate-900">{step.title}</h3>
-                    <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm font-bold">
-                      Bước {index + 1}
-                    </span>
-                  </div>
-                  <p className="text-slate-600 mb-6 text-lg">{step.description}</p>
+          {/* 2. SIDEBAR BỘ LỌC */}
+          <aside className="w-full lg:w-1/4 space-y-8 bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 h-fit sticky top-24">
+            <div className="flex items-center gap-3 font-bold text-xl mb-6 uppercase tracking-wider text-slate-800">
+              <Filter size={20} className="text-violet-600" /> Bộ lọc
+            </div>
 
-                  <div className="space-y-3">
-                    {step.steps.map((stepText, stepIndex) => (
-                      <div key={stepIndex} className="flex items-start gap-3">
-                        <div className={`w-6 h-6 ${bgGradient} rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 mt-0.5`}>
-                          {stepIndex + 1}
-                        </div>
-                        <p className="text-slate-700">{stepText}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+            {/* Kỹ năng */}
+            <div className="space-y-4">
+              <h4 className="font-bold text-[11px] uppercase tracking-[0.2em] text-slate-400">Kỹ năng</h4>
+              <div className="flex flex-wrap gap-2">
+                {["Tất cả", "React", "Figma", "Node.js", "Tailwind"].map((skill) => (
+                  <button
+                    key={skill}
+                    onClick={() => setSelectedSkill(skill)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${selectedSkill === skill
+                      ? `${bgGradient} text-white border-transparent shadow-md`
+                      : "bg-slate-50 border-slate-100 text-slate-500 hover:bg-violet-100 hover:text-violet-600"
+                      }`}
+                  >
+                    {skill}
+                  </button>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
 
-        {/* Features Section */}
-        <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200 mb-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Tính năng nổi bật</h2>
-            <p className="text-slate-600 text-lg">Những tính năng giúp bạn làm việc hiệu quả hơn</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <div key={index} className="text-center">
-                <div className={`w-16 h-16 ${bgGradient} rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg`}>
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">{feature.title}</h3>
-                <p className="text-slate-600">{feature.description}</p>
+            {/* THANH MỨC LƯƠNG (Đã hoạt động) */}
+            <div className="space-y-6 pt-6 border-t border-slate-50">
+              <div className="flex justify-between items-center">
+                <h4 className="font-bold text-[11px] uppercase tracking-[0.2em] text-slate-400">Mức lương tối đa</h4>
+                <span className="text-sm font-bold text-violet-600">${priceRange}/h</span>
               </div>
-            ))}
-          </div>
-        </div>
+              <input
+                type="range"
+                min="20"
+                max="200"
+                step="5"
+                value={priceRange}
+                onChange={(e) => setPriceRange(parseInt(e.target.value))}
+                className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-violet-600 hover:accent-cyan-500 transition-all"
+              />
+              <div className="flex justify-between text-[10px] font-bold text-slate-400">
+                <span>$20</span>
+                <span>$200</span>
+              </div>
+            </div>
+          </aside>
 
-        {/* FAQ Section */}
-        <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200 mb-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Câu hỏi thường gặp</h2>
-            <p className="text-slate-600 text-lg">Giải đáp những thắc mắc phổ biến</p>
-          </div>
+          {/* 3. DANH SÁCH FREELANCER */}
+          <main className="flex-1">
+            {/* Thanh Sort & Info */}
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+              <p className="text-slate-500 font-bold">Hiển thị <span className="text-slate-900 font-bold">{freelancers.length}</span> kết quả</p>
 
-          <div className="space-y-4">
-            {faqs.map((faq, index) => (
-              <div key={index} className="border border-slate-200 rounded-2xl overflow-hidden">
+              <div className="relative">
                 <button
-                  onClick={() => toggleSection(`faq-${index}`)}
-                  className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 transition"
+                  onClick={() => setShowSortMenu(!showSortMenu)}
+                  className="flex items-center gap-2 text-xs font-bold text-slate-700 uppercase tracking-widest hover:text-violet-600 transition"
                 >
-                  <span className="font-bold text-slate-900">{faq.question}</span>
-                  {expandedSection === `faq-${index}` ? (
-                    <ChevronUp className="w-5 h-5 text-slate-500" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-slate-500" />
-                  )}
+                  Sắp xếp: {sortBy === 'newest' ? 'Mới nhất' : sortBy === 'price-asc' ? 'Giá thấp' : sortBy === 'price-desc' ? 'Giá cao' : 'Đánh giá'}
+                  <ChevronDown size={16} />
                 </button>
-                {expandedSection === `faq-${index}` && (
-                  <div className="px-6 pb-4">
-                    <p className="text-slate-600">{faq.answer}</p>
+
+                {showSortMenu && (
+                  <div className="absolute right-0 mt-3 w-48 bg-white border border-slate-100 shadow-xl rounded-2xl p-2 z-20">
+                    {[
+                      { label: 'Mới nhất', val: 'newest' },
+                      { label: 'Giá: Thấp đến Cao', val: 'price-asc' },
+                      { label: 'Giá: Cao đến Thấp', val: 'price-desc' },
+                      { label: 'Đánh giá cao nhất', val: 'rating' },
+                    ].map((item) => (
+                      <button
+                        key={item.val}
+                        onClick={() => { setSortBy(item.val); setShowSortMenu(false); }}
+                        className="w-full text-left px-4 py-2.5 text-[11px] font-bold text-slate-600 hover:bg-violet-50 hover:text-violet-600 rounded-xl transition"
+                      >
+                        {item.label}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
 
-        {/* CTA Section */}
-        <div className={`rounded-3xl p-12 text-center text-white shadow-xl ${bgGradient}`}>
-          <h2 className="text-3xl font-bold mb-4">Sẵn sàng bắt đầu?</h2>
-          <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">
-            Tham gia cộng đồng FreelanceHub ngay hôm nay và bắt đầu hành trình làm việc freelance thành công!
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href={activeTab === "client" ? "/auth/register" : "/auth/register"}
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-violet-600 font-bold rounded-2xl hover:bg-gray-50 transition shadow-lg"
-            >
-              Đăng ký ngay
-              <ArrowRight className="w-5 h-5" />
-            </a>
-            <a
-              href="/"
-              className="inline-flex items-center gap-2 px-8 py-4 border-2 border-white text-white font-bold rounded-2xl hover:bg-white/10 transition"
-            >
-              <HelpCircle className="w-5 h-5" />
-              Khám phá thêm
-            </a>
-          </div>
+            {loading ? (
+              <div className="flex justify-center py-32"><Loader2 className="animate-spin text-violet-600" size={40} /></div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                {freelancers.map((free) => (
+                  <div key={free.id} className="bg-white p-7 rounded-[3rem] shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border border-slate-50 group">
+                    <div className="flex items-center gap-5 mb-6">
+                      <div className={`relative w-20 h-20 p-1 rounded-full ${bgGradient}`}>
+                        {free.avatar_url ? (
+                          <img src={free.avatar_url} alt="avatar" className="w-full h-full rounded-full object-cover shrink-0" />
+                        ) : (
+                          <div className="w-full h-full rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold shrink-0">
+                            {free?.full_name?.charAt(0).toUpperCase()}
+                          </div>
+                        )}                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-slate-900 group-hover:text-violet-600 transition leading-tight">{free.full_name}</h3>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{free.role || "Freelancer"}</p>
+                        {/* <div className="flex items-center gap-1 mt-2">
+                          <Star size={14} className="fill-yellow-400 text-yellow-400" />
+                          <span className="text-xs font-bold text-slate-900">{free.rating}</span>
+                        </div> */}
+                      </div>
+                    </div>
+
+                    {/* Footer Info */}
+                    <div className="flex justify-between items-center pt-5 border-t border-slate-50">
+                      <div className="text-2xl font-bold text-slate-900">
+                        ${free.price}<span className="text-[10px] text-slate-400 font-bold uppercase ml-1">/h</span>
+                      </div>
+                      <button className={`px-6 py-3 ${bgGradient} text-white text-[10px] font-bold rounded-2xl hover:scale-105 transition-all shadow-lg uppercase`}>
+                        Hồ sơ
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </main>
         </div>
       </div>
     </div>

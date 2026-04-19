@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Navbar } from "@/src/app/components/shared/Navbar";
-import { Footer } from "@/src/app/components/shared/Footer";
+import { Navbar } from "@/src/components/shared/Navbar";
+import { Footer } from "@/src/components/shared/Footer";
 import { createClient } from "../utils/supabase/server";
 
 export const metadata: Metadata = {

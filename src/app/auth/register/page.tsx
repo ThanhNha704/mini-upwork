@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/src/utils/supabase/client";
-import { verifyOtpAction } from "@/src/app/services/authActions";
+import { verifyOtpAction } from "@/src/actions/authActions";
 import {
   User,
   Mail,
@@ -96,7 +96,7 @@ export default function RegisterPage() {
     if (error) {
       setError(`Xác thực thất bại: ${error.message}`);
     } else if (data.user) {
-      router.push('/profile');
+      router.push('/auth/login');
     }
     setLoading(false);
   };

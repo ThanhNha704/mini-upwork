@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/src/utils/supabase/client";
-import { verifyOtpAction } from "@/src/app/services/authActions";
+import { verifyOtpAction } from "@/src/actions/authActions";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock, ArrowRight, Loader2, AlertCircle, ShieldCheck, RefreshCcw, Eye, EyeOff } from "lucide-react";
@@ -25,7 +25,7 @@ export default function LoginPage() {
       FREELANCER: "/dashboard/freelancer",
       CLIENT: "/dashboard/client/manage-jobs"
     };
-    router.push(paths[role] || "/profile");
+    router.push(paths[role]);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -60,6 +60,24 @@ export default function LoginPage() {
     } else if (data.user) handleRedirect(data.user);
   };
 
+  // --- HÀM GỬI LẠI OTP MỚI ---
+  const handleResendOtp = async () => {
+    setLoading(true);
+    setMessage({ text: '', isError: true });
+
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: authData.email,
+    });
+
+    if (error) {
+      setMessage({ text: `Gửi lại mã thất bại: ${error.message}`, isError: true });
+    } else {
+      setMessage({ text: "Mã OTP mới đã được gửi vào email của bạn.", isError: false });
+    }
+    setLoading(false);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-md w-full bg-white rounded-4xl shadow-xl p-8 border border-gray-100">
@@ -89,11 +107,11 @@ export default function LoginPage() {
 
             <div className="relative">
               <Lock className="absolute left-4 top-4 text-slate-400" size={18} />
-              <input 
-              required 
-              type={showPassword ? "text" : "password"} 
-              placeholder="Mật khẩu" 
-              className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-violet-500 transition-all"
+              <input
+                required
+                type={showPassword ? "text" : "password"}
+                placeholder="Mật khẩu"
+                className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-violet-500 transition-all"
                 value={authData.password} onChange={e => updateData('password', e.target.value)}
               />
               <button
@@ -126,13 +144,22 @@ export default function LoginPage() {
               <button
                 type="button"
                 disabled={loading}
-                onClick={async () => { setLoading(true); await supabase.auth.resend({ type: 'signup', email: authData.email }); setLoading(false); }}
+                onClick={async () => { handleResendOtp(); }}
                 className="text-sm font-bold text-violet-600 flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <RefreshCcw size={16} className={loading ? "animate-spin" : ""} />
                 {loading ? "Đang gửi..." : "Gửi lại mã"}
               </button>
-              <button type="button" onClick={() => setStep('login')} className="text-sm text-slate-400 font-medium hover:underline">Quay lại đăng nhập</button>
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('login');
+                  setMessage({ text: '', isError: true });
+                }}
+                className="text-sm text-slate-400 font-medium hover:underline"
+              >
+                Quay lại đăng nhập
+              </button>
             </div>
           </form>
         )}

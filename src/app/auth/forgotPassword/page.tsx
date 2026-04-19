@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/src/utils/supabase/client'
-import { useRouter } from 'next/navigation'
+import { redirect, useRouter } from 'next/navigation'
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
@@ -21,7 +21,7 @@ export default function ForgotPassword() {
       setMessage(`Lỗi: ${error.message}`)
     } else {
       // Chuyển hướng sang trang nhập OTP để reset
-      router.push(`/resetpw?email=${encodeURIComponent(email)}`)
+      router.push(`/auth/resetPassword?email=${encodeURIComponent(email)}`)
     }
     setLoading(false)
   }
@@ -38,6 +38,16 @@ export default function ForgotPassword() {
           <button type="submit" disabled={loading} className="w-full py-4 bg-linear-to-r from-violet-600 to-cyan-500 text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:opacity-90 transition-all disabled:opacity-50">
             {loading ? 'Đang gửi...' : 'Gửi mã OTP'}
           </button>
+          <button
+                type="button"
+                onClick={() => {
+                  redirect('/auth/login');
+                  setMessage('');
+                }}
+                className="text-sm text-slate-400 font-medium hover:underline"
+              >
+                Quay lại đăng nhập
+              </button>
         </form>
         {message && <p className="mt-4 text-center text-sm font-medium bg-black/30 text-white p-3 rounded-lg">{message}</p>}
       </div>
