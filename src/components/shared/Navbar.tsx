@@ -68,7 +68,7 @@ export const Navbar = () => {
         GUEST: [
             { label: "Trang chủ", href: "/" },
             { label: "Tìm việc làm", href: "/jobs" },
-            { label: "Tìm tài năng", href: "/talent" },
+            { label: "Tìm Freelancer", href: "/talent" },
             { label: "Hướng dẫn", href: "/guide" },
         ],
         FREELANCER: [

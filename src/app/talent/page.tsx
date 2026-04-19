@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/src/utils/supabase/client";
-import { Search, MapPin, CheckCircle, Star, Filter, ChevronDown, Loader2 } from "lucide-react";
+import { Search, MapPin, CheckCircle, Star, Filter, ChevronDown, Loader2, X } from "lucide-react";
 
 export default function FindTalentPage() {
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [freelancers, setFreelancers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
@@ -72,32 +73,62 @@ export default function FindTalentPage() {
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex flex-col lg:flex-row gap-10">
 
-          {/* 2. SIDEBAR BỘ LỌC */}
-          <aside className="w-full lg:w-1/4 space-y-8 bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 h-fit sticky top-24">
-            <div className="flex items-center gap-3 font-bold text-xl mb-6 uppercase tracking-wider text-slate-800">
-              <Filter size={20} className="text-violet-600" /> Bộ lọc
+          {/* NÚT MỞ BỘ LỌC CHO MOBILE (Chỉ hiện trên mobile) */}
+          <button
+            onClick={() => setIsFilterOpen(true)}
+            className="lg:hidden fixed bottom-6 right-6 z-50 bg-violet-600 text-white p-4 rounded-full shadow-2xl flex items-center gap-2 font-bold transition-transform active:scale-90"
+          >
+            <Filter size={20} />
+            <span>Bộ lọc</span>
+          </button>
+
+          {/* OVERLAY & SIDEBAR */}
+          <aside className={`
+  /* Mobile Style: Biến thành drawer */
+  fixed inset-y-0 left-0 z-100 w-[85%] max-w-[320px] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out
+  ${isFilterOpen ? "translate-x-0" : "-translate-x-full"}
+  
+  /* Desktop Style: Quay lại sidebar bình thường */
+  lg:translate-x-0 lg:w-1/4 lg:z-10 lg:block lg:h-fit lg:sticky lg:top-24 lg:rounded-[2.5rem] lg:border lg:border-slate-100 lg:p-8 lg:shadow-sm
+`}>
+            {/* Nút Đóng (Chỉ hiện trên Mobile) */}
+            <div className="flex lg:hidden justify-between items-center p-6 border-b">
+              <span className="font-bold text-lg uppercase tracking-wider">Bộ lọc</span>
+              <button onClick={() => setIsFilterOpen(false)} className="p-2 bg-slate-100 rounded-full">
+                <X size={20} /> {/* Import X từ lucide-react */}
+              </button>
             </div>
 
-            {/* Kỹ năng */}
-            <div className="space-y-4">
-              <h4 className="font-bold text-[11px] uppercase tracking-[0.2em] text-slate-400">Kỹ năng</h4>
-              <div className="flex flex-wrap gap-2">
-                {["Tất cả", "React", "Figma", "Node.js", "Tailwind"].map((skill) => (
-                  <button
-                    key={skill}
-                    onClick={() => setSelectedSkill(skill)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${selectedSkill === skill
-                      ? `${bgGradient} text-white border-transparent shadow-md`
-                      : "bg-slate-50 border-slate-100 text-slate-500 hover:bg-violet-100 hover:text-violet-600"
-                      }`}
-                  >
-                    {skill}
-                  </button>
-                ))}
+            <div className="p-8 lg:p-0 space-y-8">
+              {/* PHẦN NỘI DUNG BỘ LỌC (GIỮ NGUYÊN CODE CŨ CỦA BẠN) */}
+              <div className="items-center gap-3 font-bold text-xl mb-6 uppercase tracking-wider text-slate-800 lg:flex hidden">
+                <Filter size={20} className="text-violet-600" /> Bộ lọc
               </div>
-            </div>
 
-            {/* THANH MỨC LƯƠNG (Đã hoạt động) */}
+              {/* Kỹ năng */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-[11px] uppercase tracking-[0.2em] text-slate-400">Kỹ năng</h4>
+                <div className="flex flex-wrap gap-2">
+                  {["Tất cả", "React", "Figma", "Node.js", "Tailwind"].map((skill) => (
+                    <button
+                      key={skill}
+                      onClick={() => {
+                        setSelectedSkill(skill);
+                        // Tự động đóng trên mobile sau khi chọn
+                        if (window.innerWidth < 1024) setIsFilterOpen(false);
+                      }}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${selectedSkill === skill
+                          ? `${bgGradient} text-white border-transparent shadow-md`
+                          : "bg-slate-50 border-slate-100 text-slate-500 hover:bg-violet-100 hover:text-violet-600"
+                        }`}
+                    >
+                      {skill}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* THANH MỨC LƯƠNG (Đã hoạt động) */}
             <div className="space-y-6 pt-6 border-t border-slate-50">
               <div className="flex justify-between items-center">
                 <h4 className="font-bold text-[11px] uppercase tracking-[0.2em] text-slate-400">Mức lương tối đa</h4>
@@ -105,7 +136,7 @@ export default function FindTalentPage() {
               </div>
               <input
                 type="range"
-                min="20"
+                min="0"
                 max="200"
                 step="5"
                 value={priceRange}
@@ -113,11 +144,29 @@ export default function FindTalentPage() {
                 className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-violet-600 hover:accent-cyan-500 transition-all"
               />
               <div className="flex justify-between text-[10px] font-bold text-slate-400">
-                <span>$20</span>
+                <span>$0</span>
                 <span>$200</span>
               </div>
             </div>
+
+
+              {/* Nút Áp dụng (Chỉ hiện trên mobile) */}
+              <button
+                onClick={() => setIsFilterOpen(false)}
+                className="lg:hidden w-full py-4 bg-violet-600 text-white rounded-2xl font-bold shadow-lg"
+              >
+                Áp dụng
+              </button>
+            </div>
           </aside>
+
+          {/* LỚP NỀN MỜ (Khi mở Drawer trên Mobile) */}
+          {isFilterOpen && (
+            <div
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-90 lg:hidden"
+              onClick={() => setIsFilterOpen(false)}
+            />
+          )}
 
           {/* 3. DANH SÁCH FREELANCER */}
           <main className="flex-1">
