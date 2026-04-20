@@ -3,7 +3,7 @@ import { CreditCard, ArrowUpRight, Wallet } from "lucide-react";
 
 export default function EarningsPage() {
   return (
-    <div className="space-y-8">
+    <div className="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Tổng thu nhập */}
         <div className="p-6 bg-linear-to-br from-violet-600 to-indigo-700 rounded-3xl text-white shadow-xl shadow-violet-200">

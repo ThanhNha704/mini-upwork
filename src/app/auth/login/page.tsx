@@ -23,7 +23,7 @@ export default function LoginPage() {
     const role = user?.user_metadata?.role;
     const paths: Record<string, string> = {
       FREELANCER: "/dashboard/freelancer",
-      CLIENT: "/dashboard/client/manage-jobs"
+      CLIENT: "/dashboard/client"
     };
     router.push(paths[role]);
   };

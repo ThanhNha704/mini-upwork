@@ -53,7 +53,7 @@ export async function proxy(request: NextRequest) {
     }
 
     if (path.startsWith('/dashboard/freelancer') && role !== 'FREELANCER') {
-      return NextResponse.redirect(new URL('/dashboard/client/manage-jobs', request.url))
+      return NextResponse.redirect(new URL('/dashboard/client/', request.url))
     }
   }
 

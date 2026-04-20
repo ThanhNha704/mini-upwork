@@ -10,8 +10,8 @@ export default function FreelancerDashboard() {
   ];
 
   return (
-    <div className="space-y-8">
-      <div>
+    <div className="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen">
+      <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900">Chào buổi sáng, Freelancer!</h1>
         <p className="text-slate-500">Đây là tóm tắt hoạt động của bạn trong tuần này.</p>
       </div>

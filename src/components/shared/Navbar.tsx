@@ -78,7 +78,8 @@ export const Navbar = () => {
             { label: "Thu nhập", href: "/dashboard/freelancer/earnings" },
         ],
         CLIENT: [
-            { label: "Quản lý dự án", href: "/dashboard/client/manage-jobs" },
+            { label: "Tổng quan", href: "/dashboard/client", icon: <Briefcase size={18} /> },
+            { label: "Quản lý dự án", href: "/dashboard/client/jobs" },
             { label: "Đăng dự án", href: "/dashboard/client/post-job", icon: <PlusCircle size={18} /> },
             { label: "Tìm Freelancer", href: "/talent" },
         ]
