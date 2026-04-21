@@ -127,9 +127,10 @@ export const Navbar = () => {
                                         <MessageSquare size={22} />
                                         <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
                                     </Link>
-                                    <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition">
+                                    {/* Nút thông báo */}
+                                    {/* <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition">
                                         <Bell size={22} />
-                                    </button>
+                                    </button> */}
                                 </div>
 
                                 <div className="h-8 w-px bg-gray-200 mx-2 hidden md:block"></div>

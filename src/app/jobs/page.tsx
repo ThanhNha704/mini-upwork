@@ -1,323 +1,210 @@
-// src/app/guide/page.tsx
 "use client";
 
-import { useState } from "react";
-import {
-  User,
-  Briefcase,
-  MessageSquare,
-  CreditCard,
-  CheckCircle,
-  ArrowRight,
-  Star,
-  Users,
-  FileText,
-  Search,
-  PlusCircle,
-  TrendingUp,
-  Shield,
-  Clock,
-  Award,
-  HelpCircle,
-  ChevronDown,
-  ChevronUp
-} from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { getAllJobsAction, applyJobAction } from "@/src/actions/jobActions";
+import { Filter, ChevronRight } from 'lucide-react'
+import Link from "next/link"
 
-export default function GuidePage() {
-  const [activeTab, setActiveTab] = useState("client");
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+export default function FindJobsPage() {
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState({ text: "", type: "" });
+  const [filters, setFilters] = useState({
+    query: "",
+    maxPrice: 5000,
+    sortBy: "newest",
+  });
 
-  const bgGradient = "bg-linear-to-r from-violet-600 to-cyan-500";
-  const textGradient = "bg-linear-to-r from-violet-600 to-cyan-500 bg-clip-text text-transparent";
-
-  const toggleSection = (sectionId: string) => {
-    setExpandedSection(expandedSection === sectionId ? null : sectionId);
+  const fetchJobs = async () => {
+    setLoading(true);
+    try {
+      const data = await getAllJobsAction(filters);
+      setJobs(data);
+    } catch (error) {
+      setMessage({ text: "Không thể tải danh sách công việc", type: "error" });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const clientSteps = [
-    {
-      id: "register",
-      icon: <User className="w-8 h-8" />,
-      title: "Đăng ký tài khoản Client",
-      description: "Tạo tài khoản để đăng dự án và thuê freelancer",
-      steps: [
-        "Truy cập trang đăng ký và chọn vai trò 'Client'",
-        "Điền thông tin cá nhân và xác nhận email",
-        "Hoàn tất đăng ký và đăng nhập vào hệ thống"
-      ]
-    },
-    {
-      id: "post-job",
-      icon: <PlusCircle className="w-8 h-8" />,
-      title: "Đăng dự án",
-      description: "Tạo và đăng tải dự án của bạn",
-      steps: [
-        "Nhấn 'Đăng dự án mới' từ menu chính",
-        "Điền thông tin chi tiết: tiêu đề, mô tả, ngân sách",
-        "Xem lại và đăng tải dự án lên nền tảng"
-      ]
-    },
-    {
-      id: "review-apps",
-      icon: <FileText className="w-8 h-8" />,
-      title: "Xem hồ sơ ứng tuyển",
-      description: "Đánh giá và chọn freelancer phù hợp",
-      steps: [
-        "Truy cập 'Quản lý dự án' để xem danh sách ứng viên",
-        "Xem hồ sơ, kinh nghiệm và đề xuất giá của freelancer",
-        "Liên hệ qua chat để trao đổi chi tiết"
-      ]
-    },
-    {
-      id: "hire",
-      icon: <CheckCircle className="w-8 h-8" />,
-      title: "Thuê freelancer",
-      description: "Chọn và thuê freelancer cho dự án",
-      steps: [
-        "Chọn freelancer phù hợp từ danh sách ứng viên",
-        "Thanh toán qua Stripe để bắt đầu dự án",
-        "Theo dõi tiến độ và giao tiếp qua chat"
-      ]
+  useEffect(() => {
+    fetchJobs();
+    if (message.text) {
+      const timer = setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+      return () => clearTimeout(timer);
     }
-  ];
-
-  const freelancerSteps = [
-    {
-      id: "register-freelancer",
-      icon: <User className="w-8 h-8" />,
-      title: "Đăng ký tài khoản Freelancer",
-      description: "Tạo tài khoản để nhận việc freelance",
-      steps: [
-        "Truy cập trang đăng ký và chọn vai trò 'Freelancer'",
-        "Điền thông tin cá nhân và kỹ năng chuyên môn",
-        "Hoàn tất đăng ký và cập nhật hồ sơ cá nhân"
-      ]
-    },
-    {
-      id: "find-jobs",
-      icon: <Search className="w-8 h-8" />,
-      title: "Tìm việc làm",
-      description: "Khám phá các dự án phù hợp với kỹ năng",
-      steps: [
-        "Truy cập trang 'Tìm việc làm' để xem danh sách dự án",
-        "Sử dụng bộ lọc để tìm dự án phù hợp với kỹ năng",
-        "Đọc kỹ mô tả dự án và yêu cầu của client"
-      ]
-    },
-    {
-      id: "apply",
-      icon: <Briefcase className="w-8 h-8" />,
-      title: "Ứng tuyển dự án",
-      description: "Gửi hồ sơ ứng tuyển cho dự án",
-      steps: [
-        "Nhấn 'Xem chi tiết' để đọc thông tin dự án",
-        "Điền đề xuất giá và lời nhắn gửi client",
-        "Gửi hồ sơ và theo dõi trạng thái ứng tuyển"
-      ]
-    },
-    {
-      id: "work",
-      icon: <TrendingUp className="w-8 h-8" />,
-      title: "Thực hiện dự án",
-      description: "Hoàn thành công việc và nhận thanh toán",
-      steps: [
-        "Giao tiếp với client qua hệ thống chat",
-        "Hoàn thành công việc theo yêu cầu và deadline",
-        "Nhận thanh toán tự động sau khi hoàn thành"
-      ]
-    }
-  ];
-
-  const features = [
-    {
-      icon: <Shield className="w-6 h-6" />,
-      title: "Bảo mật & An toàn",
-      description: "Hệ thống thanh toán an toàn với Stripe, bảo vệ thông tin cá nhân"
-    },
-    {
-      icon: <MessageSquare className="w-6 h-6" />,
-      title: "Chat thời gian thực",
-      description: "Giao tiếp trực tiếp với client/freelancer qua hệ thống chat tích hợp"
-    },
-    {
-      icon: <Clock className="w-6 h-6" />,
-      title: "Quản lý thời gian",
-      description: "Theo dõi deadline, tiến độ dự án và lịch sử làm việc"
-    },
-    {
-      icon: <Award className="w-6 h-6" />,
-      title: "Đánh giá & Uy tín",
-      description: "Hệ thống đánh giá giúp xây dựng uy tín và tìm đối tác phù hợp"
-    }
-  ];
-
-  const faqs = [
-    {
-      question: "Phí dịch vụ của FreelanceHub là bao nhiêu?",
-      answer: "FreelanceHub hoàn toàn miễn phí cho freelancer. Client chỉ trả phí khi thuê freelancer thành công."
-    },
-    {
-      question: "Thanh toán được thực hiện như thế nào?",
-      answer: "Chúng tôi sử dụng Stripe để xử lý thanh toán an toàn. Tiền được giữ trong tài khoản escrow cho đến khi dự án hoàn thành."
-    },
-    {
-      question: "Tôi có thể hủy dự án sau khi đã thuê freelancer không?",
-      answer: "Có thể hủy dự án theo chính sách của chúng tôi. Vui lòng liên hệ hỗ trợ để được giải quyết."
-    },
-    {
-      question: "Làm thế nào để liên hệ hỗ trợ?",
-      answer: "Bạn có thể liên hệ chúng tôi qua email support@freelancehub.com hoặc chat trực tiếp trên nền tảng."
-    }
-  ];
+  }, [filters, message.text]);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Hero Section */}
-      <section className={`w-full h-64 ${bgGradient} flex flex-col items-center justify-center text-white px-4 text-center`}>
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight uppercase">
-          Hướng dẫn sử dụng
-        </h1>
-        <p className="text-lg opacity-90 font-medium max-w-2xl">
-          Hướng dẫn chi tiết cách sử dụng FreelanceHub cho cả Client và Freelancer
-        </p>
-      </section>
+    <div className="min-h-screen bg-gray-50 pb-12 relative font-sans">
+      {/* Alert Message */}
+      {message.text && (
+        <div className={`fixed top-10 right-10 z-50 px-6 py-3 rounded-xl shadow-lg border animate-in fade-in slide-in-from-top-4 duration-300 ${message.type === "error" ? "bg-red-50 border-red-200 text-red-600" : "bg-green-50 border-green-200 text-green-600"
+          }`}>
+          <span className="font-bold">{message.type === "error" ? "Lỗi: " : "Thành công: "}</span>
+          {message.text}
+        </div>
+      )}
 
-      <div className="max-w-6xl mx-auto px-6 py-12">
-        {/* Tab Navigation */}
-        <div className="flex justify-center mb-12">
-          <div className="bg-white rounded-2xl p-2 shadow-lg border border-slate-200">
-            <button
-              onClick={() => setActiveTab("client")}
-              className={`px-8 py-3 rounded-xl font-bold transition-all ${
-                activeTab === "client"
-                  ? `${bgGradient} text-white shadow-md`
-                  : "text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              <Users className="w-5 h-5 inline mr-2" />
-              Cho Client
-            </button>
-            <button
-              onClick={() => setActiveTab("freelancer")}
-              className={`px-8 py-3 rounded-xl font-bold transition-all ${
-                activeTab === "freelancer"
-                  ? `${bgGradient} text-white shadow-md`
-                  : "text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              <Briefcase className="w-5 h-5 inline mr-2" />
-              Cho Freelancer
+      {/* Header Section */}
+      <div className="bg-linear-to-br from-violet-600 to-cyan-500 pt-10 pb-10 px-4">
+        <div className="max-w-7xl mx-auto text-center text-white">
+          <h1 className="text-3xl md:text-4xl font-bold mb-3 uppercase tracking-tight">Tìm việc làm tự do</h1>
+          <p className="opacity-80 mb-8 text-sm md:text-base font-medium">Khám phá những dự án phù hợp với kỹ năng của bạn</p>
+
+          <div className="max-w-2xl mx-auto flex gap-2 p-1.5 bg-white rounded-2xl shadow-xl">
+            <input
+              type="text"
+              placeholder="Nhập tên dự án cần tìm..."
+              className="flex-1 px-4 py-3 text-gray-700 outline-none rounded-xl font-medium text-sm"
+              onChange={(e) => setFilters({ ...filters, query: e.target.value })}
+            />
+            <button className="bg-violet-600 hover:bg-violet-700 px-6 py-3 rounded-xl font-bold transition-all text-sm">
+              Tìm kiếm
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Steps Section */}
-        <div className="space-y-6 mb-16">
-          {(activeTab === "client" ? clientSteps : freelancerSteps).map((step, index) => (
-            <div key={step.id} className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200">
-              <div className="flex items-start gap-6">
-                <div className={`w-16 h-16 ${bgGradient} rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0`}>
-                  {step.icon}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-4 mb-4">
-                    <h3 className="text-2xl font-bold text-slate-900">{step.title}</h3>
-                    <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm font-bold">
-                      Bước {index + 1}
-                    </span>
-                  </div>
-                  <p className="text-slate-600 mb-6 text-lg">{step.description}</p>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 mt-10 flex flex-col md:flex-row gap-8">
+        {/* Sidebar Filter */}
+        <aside className="w-full md:w-80 bg-white p-3 lg:p-7 rounded-4xl shadow-sm h-fit md:sticky md:top-24 border border-gray-100">
+          <div className="items-center gap-3 font-bold text-xl mb-6 uppercase tracking-wider text-slate-800 lg:flex hidden">
+            <Filter size={20} className="text-violet-600" /> Bộ lọc
+          </div>
 
-                  <div className="space-y-3">
-                    {step.steps.map((stepText, stepIndex) => (
-                      <div key={stepIndex} className="flex items-start gap-3">
-                        <div className={`w-6 h-6 ${bgGradient} rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 mt-0.5`}>
-                          {stepIndex + 1}
-                        </div>
-                        <p className="text-slate-700">{stepText}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+          <div className="mb-10">
+            <div className="flex justify-between mb-4">
+              <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">Ngân sách tối đa</label>
+              <span className="text-violet-600 font-bold text-sm">${filters.maxPrice}</span>
             </div>
-          ))}
+            <input
+              type="range" min="10" max="5000" step="50"
+              className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-violet-600"
+              onChange={(e) => setFilters({ ...filters, maxPrice: parseInt(e.target.value) })}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-bold text-gray-400 uppercase tracking-widest block mb-4">Sắp xếp theo</label>
+            <select
+              className="w-full p-4 bg-gray-50 border border-transparent rounded-2xl text-gray-700 font-bold text-sm focus:bg-white focus:border-violet-100 outline-none transition-all"
+              onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
+            >
+              <option value="newest">Mới nhất</option>
+              <option value="price_desc">Giá: Cao - Thấp</option>
+              <option value="price_asc">Giá: Thấp - Cao</option>
+            </select>
+          </div>
+        </aside>
+
+        {/* Job List */}
+        <main className="flex-1">
+          <div className="flex items-center gap-2 mb-6 px-2 text-gray-400">
+            <span className="text-sm font-bold uppercase tracking-widest">Kết quả:</span>
+            <span className="text-violet-600 font-bold text-sm">{jobs.length} công việc</span>
+          </div>
+
+          {loading ? (
+            <div className="space-y-4">
+              {[1, 2].map(i => <div key={i} className="h-48 bg-white animate-pulse rounded-4xl"></div>)}
+            </div>
+          ) : (
+            <div className="grid gap-6">
+              {jobs.map((job) => (
+                <JobCard key={job.id} job={job} setMessage={setMessage} />
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function JobCard({ job, setMessage }: { job: any; setMessage: any }) {
+  const [isApplying, setIsApplying] = useState(false);
+
+  const handleApply = async () => {
+    setIsApplying(true);
+    try {
+      const result = await applyJobAction({
+        jobId: job.id,
+        bidAmount: job.budget,
+        proposal: "Tôi quan tâm đến dự án này."
+      });
+      if (result.success) setMessage({ text: "Ứng tuyển thành công!", type: "success" });
+      else setMessage({ text: result.error || "Lỗi ứng tuyển", type: "error" });
+    } catch (err) {
+      setMessage({ text: "Lỗi kết nối", type: "error" });
+    } finally {
+      setIsApplying(false);
+    }
+  };
+
+  return (
+    <div className="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm hover:shadow-md transition-all border border-gray-50 group">
+      <div className="flex justify-between items-start mb-6">
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="px-2.5 py-1 bg-green-50 text-green-600 text-sm font-bold rounded-lg uppercase tracking-tighter border border-green-200">
+              {job.status}
+            </span>
+            <span className="text-gray-400 text-sm font-medium">
+              {new Date(job.createdAt).toLocaleDateString('vi-VN')}
+            </span>
+          </div>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-800 group-hover:text-violet-600 transition-colors leading-tight">
+            {job.title}
+          </h2>
         </div>
-
-        {/* Features Section */}
-        <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200 mb-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Tính năng nổi bật</h2>
-            <p className="text-slate-600 text-lg">Những tính năng giúp bạn làm việc hiệu quả hơn</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <div key={index} className="text-center">
-                <div className={`w-16 h-16 ${bgGradient} rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg`}>
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">{feature.title}</h3>
-                <p className="text-slate-600">{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* FAQ Section */}
-        <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200 mb-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Câu hỏi thường gặp</h2>
-            <p className="text-slate-600 text-lg">Giải đáp những thắc mắc phổ biến</p>
-          </div>
-
-          <div className="space-y-4">
-            {faqs.map((faq, index) => (
-              <div key={index} className="border border-slate-200 rounded-2xl overflow-hidden">
-                <button
-                  onClick={() => toggleSection(`faq-${index}`)}
-                  className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 transition"
-                >
-                  <span className="font-bold text-slate-900">{faq.question}</span>
-                  {expandedSection === `faq-${index}` ? (
-                    <ChevronUp className="w-5 h-5 text-slate-500" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-slate-500" />
-                  )}
-                </button>
-                {expandedSection === `faq-${index}` && (
-                  <div className="px-6 pb-4">
-                    <p className="text-slate-600">{faq.answer}</p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* CTA Section */}
-        <div className={`rounded-3xl p-12 text-center text-white shadow-xl ${bgGradient}`}>
-          <h2 className="text-3xl font-bold mb-4">Sẵn sàng bắt đầu?</h2>
-          <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">
-            Tham gia cộng đồng FreelanceHub ngay hôm nay và bắt đầu hành trình làm việc freelance thành công!
+        <div className="text-right">
+          <p className="text-2xl md:text-3xl font-bold text-violet-600 tracking-tight">
+            ${job.budget}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href={activeTab === "client" ? "/auth/register" : "/auth/register"}
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-violet-600 font-bold rounded-2xl hover:bg-gray-50 transition shadow-lg"
-            >
-              Đăng ký ngay
-              <ArrowRight className="w-5 h-5" />
-            </a>
-            <a
-              href="/"
-              className="inline-flex items-center gap-2 px-8 py-4 border-2 border-white text-white font-bold rounded-2xl hover:bg-white/10 transition"
-            >
-              <HelpCircle className="w-5 h-5" />
-              Khám phá thêm
-            </a>
+          {/* <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Fixed Price</span> */}
+        </div>
+      </div>
+
+      <p className="text-gray-500 text-sm leading-relaxed mb-8 line-clamp-2 italic">
+        {job.description}
+      </p>
+
+      <div className="flex flex-wrap gap-2 mb-8">
+        {job.job_required_skills?.map((s: any, idx: number) => (
+          <span key={idx} className="px-3.5 py-1.5 bg-gray-50 text-gray-500 text-[10px] font-bold rounded-xl border border-gray-100">
+            {s.skills?.name}
+          </span>
+        ))}
+      </div>
+
+      <div className="flex items-center justify-between pt-6 border-t border-gray-50">
+        <div className="flex items-center gap-3">
+          <img
+            src={job.client?.avatar_url || "https://ui-avatars.com/api/?name=Client"}
+            className="w-9 h-9 rounded-xl object-cover border border-gray-100"
+            alt="avatar"
+          />
+          <div>
+            <p className="text-sm font-bold text-gray-800 leading-none mb-1">{job.client?.full_name}</p>
+            {/* <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Verified Client</p> */}
           </div>
         </div>
+
+        <Link
+          href={`/jobs/${job?.id}`}
+          className="p-3 bg-gray-50 text-gray-400 rounded-xl group-hover:bg-violet-600 group-hover:text-white transition-all"
+        >
+          <ChevronRight size={20} />
+        </Link>
+        <button
+          onClick={handleApply}
+          disabled={isApplying || job.status !== 'OPEN'}
+          className="px-7 py-3 bg-violet-600 text-white text-[11px] font-bold rounded-xl hover:bg-violet-700 transition-all disabled:bg-gray-200 shadow-lg shadow-violet-100"
+        >
+          {isApplying ? "ĐANG GỬI..." : "ỨNG TUYỂN"}
+        </button>
       </div>
     </div>
   );

@@ -5,6 +5,6 @@ export const metadata: Metadata = {
   description: 'Khám phá và ứng tuyển vào các công việc phù hợp với kỹ năng của bạn',
 }
 
-export default function LoginLayout({ children }: { children: React.ReactNode }) {
+export default function JobsLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }

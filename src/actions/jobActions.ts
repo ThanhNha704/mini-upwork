@@ -105,16 +105,46 @@ export async function updateJob(jobId: string, formData: any) {
 export async function getJobDetails(jobId: string) {
   const supabase = await createClient();
   
+  // 1. Lấy thông tin user đang đăng nhập (để check hasApplied)
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // 2. Truy vấn lồng ghép (Join nhiều cấp)
   const { data, error } = await supabase
     .from("job")
-    .select("*")
+    .select(`
+      *,
+      client:users!clientId(
+        *,
+        client_profiles(*) 
+      ),
+      skills:job_required_skills(
+        skill:skills(id, name)
+      ),
+      applications:application(freelancerId)
+    `)
     .eq("id", jobId)
     .single();
 
   if (error) {
     console.error("Lỗi lấy chi tiết Job:", error.message);
+    return null;
   }
-  return data;
+
+  // 3. Xử lý dữ liệu thô thành cấu trúc gọn đẹp cho Frontend
+  const formattedJob = {
+    ...data,
+    // Trích xuất kỹ năng thành mảng đơn giản
+    skills: data.skills?.map((s: any) => s.skill) || [],
+    // Kiểm tra xem freelancer hiện tại đã ứng tuyển chưa
+    hasApplied: data.applications?.some((app: any) => app.freelancerId === user?.id) || false
+  };
+
+  // Trả về object chứa đầy đủ các "mảnh ghép" dữ liệu
+  return { 
+    job: formattedJob, 
+    client: data.client, // Trong này đã có client_profiles nhờ câu select trên
+    hasApplied: formattedJob.hasApplied 
+  };
 }
 
 // Hàm lấy danh sách ứng viên
@@ -184,5 +214,146 @@ export async function acceptProposal(jobId: string, applicationId: string) {
     .eq("id", jobId);
 
   revalidatePath(`/client/jobs/${jobId}`);
+  return { success: true };
+}
+// Lấy danh sách Job công khai kèm Filter & Sort
+export async function getAllJobsAction(filters: {
+  query?: string;
+  maxPrice?: number;
+  sortBy?: string;
+}) {
+  const supabase = await createClient();
+
+  let query = supabase
+    .from("job")
+    .select(`
+      *,
+      client:users!clientId(full_name, avatar_url),
+      job_required_skills(skills(name))
+    `)
+    .eq("status", "OPEN");
+
+  if (filters.query) {
+    query = query.ilike("title", `%${filters.query}%`);
+  }
+  if (filters.maxPrice) {
+    query = query.lte("budget", filters.maxPrice);
+  }
+
+  // Sắp xếp
+  if (filters.sortBy === "newest") query = query.order("createdAt", { ascending: false });
+  else if (filters.sortBy === "price_desc") query = query.order("budget", { ascending: false });
+  else if (filters.sortBy === "price_asc") query = query.order("budget", { ascending: true });
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+// Hành động Apply cho Freelancer
+export async function applyJobAction(formData: {
+  jobId: string;
+  bidAmount: number;
+  proposal: string;
+}) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return { error: "Vui lòng đăng nhập để ứng tuyển" };
+
+  const { error } = await supabase.from("application").insert([{
+    jobId: formData.jobId,
+    freelancerId: user.id,
+    bidAmount: formData.bidAmount,
+    proposal: formData.proposal,
+    status: "PENDING",
+    createdAt: new Date().toISOString(),
+  }]);
+
+  if (error) return { error: "Bạn đã ứng tuyển dự án này rồi hoặc có lỗi xảy ra." };
+
+  revalidatePath("/jobs");
+  return { success: true };
+}
+
+export async function completeJobAndPay(jobId: string) {
+  const supabase = await createClient();
+
+  // Lấy thông tin Job và Application (Freelancer đã được chọn)
+  const { data: job, error: jobErr } = await supabase
+    .from("job")
+    .select(`*, application!jobId(*)` )
+    .eq("id", jobId)
+    .eq("application.status", "ACCEPTED")
+    .single();
+
+  if (jobErr || !job) return { error: "Không tìm thấy dự án hoặc ứng viên." };
+
+  const freelancerId = job.application[0].freelancerId;
+  const amount = job.budget;
+  const clientId = job.clientId;
+
+  // Thực hiện giao dịch (Sử dụng RPC để đảm bảo tính toàn vẹn dữ liệu)
+  const { data, error: txError } = await supabase.rpc('handle_job_payment', {
+    p_job_id: jobId,
+    p_client_id: clientId,
+    p_freelancer_id: freelancerId,
+    p_amount: amount
+  });
+
+  if (txError) return { error: txError.message };
+
+  revalidatePath(`/dashboard/client/manage-jobs/${jobId}`);
+  return { success: true };
+}
+
+// Lấy danh sách việc làm mà Freelancer đã ứng tuyển
+export async function getFreelancerApplications() {
+  const supabase = await createClient();
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const { data, error } = await supabase
+    .from("application")
+    .select(`
+      *,
+      job:job (
+        id,
+        title,
+        budget,
+        status,
+        client:users!clientId (
+          full_name,
+          avatar_url
+        )
+      )
+    `)
+    .eq("freelancerId", user.id)
+    .order("createdAt", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching applications:", error.message);
+    return [];
+  }
+  return data;
+}
+
+// Thêm hành động Hủy Apply
+export async function cancelApplyAction(jobId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return { error: "Vui lòng đăng nhập" };
+
+  const { error } = await supabase
+    .from("application")
+    .delete()
+    .eq("jobId", jobId)
+    .eq("freelancerId", user.id);
+
+  if (error) return { error: "Không thể hủy ứng tuyển" };
+
+  revalidatePath(`/jobs/${jobId}`);
   return { success: true };
 }

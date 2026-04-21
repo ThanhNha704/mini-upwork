@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link"
 import { useParams, useRouter } from "next/navigation";
 import {
     getJobDetails,
@@ -41,7 +42,6 @@ export default function JobDetailPage() {
     };
 
     useEffect(() => {
-        console.log(job);
         if (id) loadData();
     }, [id]);
 
@@ -137,14 +137,16 @@ export default function JobDetailPage() {
                         proposals.map((app) => (
                             <div key={app.id} className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-sm hover:shadow-md transition-shadow">
                                 <div className="flex gap-4">
-                                    <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center font-bold text-gray-400 border border-gray-200">
-                                        {app.freelancer?.full_name?.charAt(0)}
-                                    </div>
+                                    <img
+                                        src={app.freelancer?.avatar_url || "https://ui-avatars.com/api/?name=Client"}
+                                        className="w-10 h-10 rounded-full object-cover border border-gray-100"
+                                        alt="avatar"
+                                    />
                                     <div>
                                         <h4 className="font-bold text-lg">{app.freelancer?.full_name}</h4>
                                         <p className="text-sm text-gray-500 mb-2">{app.freelancer?.email}</p>
                                         <div className="text-sm text-gray-600 bg-blue-50/50 p-3 rounded-lg border-l-2 border-blue-300">
-                                            <strong>Thư ngỏ:</strong> {app.coverLetter}
+                                            <strong>Thư ngỏ:</strong> {app.proposal}
                                         </div>
                                     </div>
                                 </div>
@@ -158,12 +160,16 @@ export default function JobDetailPage() {
                                         <>
                                             <button
                                                 onClick={() => handleAcceptFreelancer(app.id)}
-                                                className="flex-1 md:flex-none bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-blue-100 shadow-lg"
+                                                className="flex-1 md:flex-none bg-linear-to-r from-violet-600 to-cyan-500 text-white px-6 py-2.5 rounded-xl font-bold hover:opacity-80 transition-all shadow-blue-100 shadow-lg"
                                             >
                                                 Chấp nhận
                                             </button>
-                                            <button className="flex-1 md:flex-none border border-gray-200 px-6 py-2.5 rounded-xl font-bold hover:bg-gray-50 transition-all">
-                                                Chat
+
+                                            <button
+                                                onClick={() => window.location.href = `/talent/${app.freelancerId}`}
+                                                className="flex-1 md:flex-none border border-gray-300 px-6 py-2.5 rounded-xl font-bold hover:bg-violet-100 transition-all text-gray-700"
+                                            >
+                                                Hồ sơ
                                             </button>
                                         </>
                                     )}
