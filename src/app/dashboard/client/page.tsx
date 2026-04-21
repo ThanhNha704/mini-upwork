@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { createClient } from "@/src/utils/supabase/client"; // Đường dẫn file supabase của bạn
+import { createClient } from "@/src/utils/supabase/client";
 import {
     PlusCircle,
     Briefcase,
@@ -16,6 +16,7 @@ export default function ClientDashboard() {
     const supabase = createClient();
     const [jobs, setJobs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         async function fetchJobs() {
@@ -33,6 +34,10 @@ export default function ClientDashboard() {
         }
         fetchJobs();
     }, []);
+
+    const filteredJobs = jobs.filter((job) =>
+        job.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     const getStatusStyle = (status: string) => {
         switch (status) {
@@ -72,6 +77,8 @@ export default function ClientDashboard() {
                         <input
                             type="text"
                             placeholder="Tìm kiếm dự án..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                             className="pl-10 pr-4 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -91,10 +98,14 @@ export default function ClientDashboard() {
                         <tbody className="divide-y divide-gray-100">
                             {loading ? (
                                 <tr><td colSpan={5} className="text-center py-10 text-gray-500">Đang tải dữ liệu...</td></tr>
-                            ) : jobs.length === 0 ? (
-                                <tr><td colSpan={5} className="text-center py-10 text-gray-500">Bạn chưa có dự án nào.</td></tr>
+                            ) : filteredJobs.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="text-center py-10 text-gray-500">
+                                        {searchTerm ? "Không tìm thấy dự án phù hợp." : "Bạn chưa có dự án nào."}
+                                    </td>
+                                </tr>
                             ) : (
-                                jobs.map((job) => (
+                                filteredJobs.map((job) => (
                                     <tr key={job.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4 font-medium text-gray-900">{job.title}</td>
                                         <td className="px-6 py-4 text-gray-600">${job.budget?.toLocaleString()}</td>

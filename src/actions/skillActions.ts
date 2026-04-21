@@ -42,6 +42,7 @@ export const updateClientSkills = async (
   return { success: true };
 };
 
+// Cập nhật kỹ năng cho freelancer
 export async function updateFreelancerSkills(supabase: any, userId: string, skillIds: string[]) {
     // Xóa tất cả kỹ năng cũ của freelancer này
     const { error: deleteError } = await supabase
@@ -64,6 +65,7 @@ export async function updateFreelancerSkills(supabase: any, userId: string, skil
         if (insertError) throw insertError;
     }
 }
+
 // Hàm lọc kỹ năng dựa trên từ khóa tìm kiếm và loại trừ những kỹ năng đã chọn
 export const filterSkills = (
   allSkills: any[],
@@ -82,5 +84,5 @@ export const filterSkills = (
     );
 
     return matchesSearch && isNotSelected;
-  }).slice(0, 6); // Trả về tối đa 6 gợi ý
+  })
 };

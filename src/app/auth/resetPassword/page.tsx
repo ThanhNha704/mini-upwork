@@ -19,7 +19,7 @@ function ResetForm() {
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // 1. Xác thực OTP
+    // Xác thực OTP
     const { error: verifyError } = await supabase.auth.verifyOtp({
       email,
       token: otp,
@@ -31,7 +31,7 @@ function ResetForm() {
       return
     }
 
-    // 2. Cập nhật mật khẩu mới
+    // Cập nhật mật khẩu mới
     const { error: updateError } = await supabase.auth.updateUser({
       password: newPassword
     })

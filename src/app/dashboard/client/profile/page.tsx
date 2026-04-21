@@ -61,7 +61,6 @@ export default function ClientProfile() {
                 if (fetchError) throw fetchError;
 
                 if (res) {
-                    // Xử lý dữ liệu từ bảng join
                     const cp = Array.isArray(res.client_profiles) ? res.client_profiles[0] : res.client_profiles;
                     const rawSkills = res.client_preferred_skills || [];
 
@@ -92,7 +91,7 @@ export default function ClientProfile() {
         initData();
     }, []);
 
-    // Logic Tìm kiếm & Chọn kỹ năng
+    // Tìm kiếm & Chọn kỹ năng
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setSearchTerm(value);
@@ -111,7 +110,7 @@ export default function ClientProfile() {
 
             let finalAvatarUrl = avatarUrl;
 
-            // 1. Xử lý Upload Avatar
+            // Xử lý Upload Avatar
             if (avatarFile) {
                 const filePath = `avatars/${user.id}/${Date.now()}.png`;
                 const { error: upErr } = await supabase.storage.from("avatars").upload(filePath, avatarFile, { upsert: true });
@@ -120,7 +119,7 @@ export default function ClientProfile() {
                 finalAvatarUrl = publicUrl;
             }
 
-            // 2. Cập nhật bảng Users
+            // Cập nhật bảng Users
             const { error: userErr } = await supabase.from("users").update({
                 full_name: data.fullName,
                 bio: data.bio,
@@ -130,7 +129,7 @@ export default function ClientProfile() {
             }).eq("id", user.id);
             if (userErr) throw userErr;
 
-            // 3. Cập nhật bảng Client_Profiles (Sử dụng upsert để thêm mới nếu chưa có profile)
+            // Cập nhật bảng client_profiles
             const { error: profileErr } = await supabase.from("client_profiles").upsert({
                 id: user.id,
                 company_name: data.companyName,
@@ -145,7 +144,7 @@ export default function ClientProfile() {
             });
             if (profileErr) throw profileErr;
 
-            // 4. Cập nhật Kỹ năng
+            // Cập nhật Kỹ năng
             const skillIds = data.preferredSkills.map(s => s.id);
             await updateClientSkills(supabase, user.id, skillIds);
 
@@ -159,7 +158,7 @@ export default function ClientProfile() {
         }
     };
 
-    // Logic thêm/xóa skill giữ nguyên nhưng đảm bảo render lại đúng state
+    // Logic thêm/xóa skill
     const addSkill = (skill: any) => {
         if (!data.preferredSkills.find(s => s.id === skill.id)) {
             setData(prev => ({ ...prev, preferredSkills: [...prev.preferredSkills, skill] }));

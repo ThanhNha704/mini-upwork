@@ -178,7 +178,7 @@ export default function PostJob() {
             
             {/* Suggestions Dropdown */}
             {suggestions.length > 0 && (
-              <div className="absolute w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden">
+              <div className="absolute w-full mt-2 max-h-60 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden overflow-y-auto">
                 {suggestions.map((s) => (
                   <button
                     key={s.id}

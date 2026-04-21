@@ -72,16 +72,16 @@ export const Navbar = () => {
             { label: "Hướng dẫn", href: "/guide" },
         ],
         FREELANCER: [
-            { label: "Tổng quan", href: "/dashboard/freelancer", icon: <Briefcase size={18} /> },
-            { label: "Tìm việc", href: "/jobs", icon: <Briefcase size={18} /> },
+            { label: "Tổng quan", href: "/dashboard/freelancer" },
+            { label: "Tìm việc", href: "/jobs" },
             { label: "Việc đã apply", href: "/dashboard/freelancer/applications" },
             { label: "Thu nhập", href: "/dashboard/freelancer/earnings" },
         ],
         CLIENT: [
-            { label: "Tổng quan", href: "/dashboard/client", icon: <Briefcase size={18} /> },
-            { label: "Quản lý dự án", href: "/dashboard/client/jobs" },
-            { label: "Đăng dự án", href: "/dashboard/client/post-job", icon: <PlusCircle size={18} /> },
+            { label: "Tổng quan", href: "/dashboard/client" },
+            { label: "Quản lý dự án", href: "/dashboard/client/manage-jobs" },
             { label: "Tìm Freelancer", href: "/talent" },
+            { label: "Tài chính", href: "/dashboard/client/billing" },
         ]
     };
 
@@ -154,7 +154,7 @@ export const Navbar = () => {
                                     )}
                                 </Link>
 
-                                <button onClick={handleLogout} className="p-2 text-gray-400 hover:text-red-500 transition-all">
+                                <button onClick={handleLogout} className="hidden sm:block p-2 text-gray-400 hover:text-red-500 transition-all">
                                     <LogOut size={20} />
                                 </button>
                             </div>

@@ -3,10 +3,10 @@
 import { createClient } from "@/src/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
+// lấy tất cả job của Client tạo
 export async function getClientJobs() {
   const supabase = await createClient();
   
-  // Lấy user hiện tại từ session
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
 
@@ -20,6 +20,7 @@ export async function getClientJobs() {
   return data;
 }
 
+// Hành động tạo job
 export async function createJobAction(formData: {
   title: string;
   budget: number;
@@ -72,10 +73,11 @@ export async function createJobAction(formData: {
     }
   }
 
-  revalidatePath("/dashboard/client/manage-jobs");
+  revalidatePath("/dashboard/client");
   return { success: true, jobId: job.id };
 }
 
+// Cập nhật job
 export async function updateJob(jobId: string, formData: any) {
   const supabase = await createClient();
 
@@ -85,7 +87,7 @@ export async function updateJob(jobId: string, formData: any) {
       title: formData.title,
       description: formData.description,
       budget: parseFloat(formData.budget),
-      status: formData.status, // Giữ nguyên hoặc cập nhật nếu cần
+      status: formData.status,
       updatedAt: new Date().toISOString(),
     })
     .eq("id", jobId)
@@ -99,6 +101,7 @@ export async function updateJob(jobId: string, formData: any) {
   return { success: true, data };
 }
 
+// Lấy chi tiết job
 export async function getJobDetails(jobId: string) {
   const supabase = await createClient();
   
@@ -110,7 +113,6 @@ export async function getJobDetails(jobId: string) {
 
   if (error) {
     console.error("Lỗi lấy chi tiết Job:", error.message);
-    // return null;
   }
   return data;
 }
