@@ -17,25 +17,40 @@ export default function EditJobPage() {
     title: "",
     description: "",
     budget: "",
-    status: ""
+    status: "",
+    skillIds: []
   });
 
   // 1. Lấy dữ liệu cũ khi vừa vào trang
   useEffect(() => {
-    async function loadJob() {
-      const data = await getJobDetails(id as string);
-      if (data) {
+  async function loadJob() {
+    try {
+      const result = await getJobDetails(id as string);
+      
+      // Kiểm tra nếu result tồn tại và có chứa thuộc tính job
+      if (result && result.job) {
+        const jobData = result.job;
+
         setFormData({
-          title: data.title,
-          description: data.description,
-          budget: data.budget.toString(),
-          status: data.status
+          title: jobData.title,
+          description: jobData.description,
+          budget: jobData.budget.toString(),
+          status: jobData.status,
+          // Nếu form của bạn có phần chọn skill, hãy map ID của chúng ra mảng string
+          skillIds: jobData.skills?.map((s: any) => s.id) || []
         });
       }
+    } catch (error) {
+      console.error("Lỗi khi tải dữ liệu chỉnh sửa:", error);
+    } finally {
       setLoading(false);
     }
+  }
+
+  if (id) {
     loadJob();
-  }, [id]);
+  }
+}, [id]);
 
   // 2. Xử lý khi nhấn Lưu
   const handleSubmit = async (e: React.FormEvent) => {
