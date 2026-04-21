@@ -3,9 +3,7 @@
 import Stripe from "stripe";
 import { redirect } from "next/navigation";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2023-10-16",
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function createCheckoutSession(formData: FormData) {
   const amount = Number(formData.get("amount"));
