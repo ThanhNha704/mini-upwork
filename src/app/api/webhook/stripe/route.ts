@@ -7,14 +7,16 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const sig = (await headers()).get("Stripe-Signature");
+  const headersList = await headers();
+  const sig = headersList.get("stripe-signature"); // Lưu ý: viết thường 'stripe-signature'
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  let event;
+  let event: Stripe.Event;
 
-  // 1. Xác thực Webhook
+  // 1. Xác thực Webhook từ Stripe
   try {
     if (!sig || !endpointSecret) {
+      console.error("❌ Thiếu signature hoặc endpoint secret");
       return new NextResponse("Missing signature or secret", { status: 400 });
     }
     event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
@@ -23,47 +25,70 @@ export async function POST(req: Request) {
     return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
-  // 2. Xử lý sự kiện thành công
+  // 2. Xử lý sự kiện nạp tiền thành công
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     
-    // SỬA LỖI Ở ĐÂY: Dùng NEXT_PUBLIC_SUPABASE_URL (https://...)
-    const supabase = createClient(
+    // Khởi tạo Supabase Admin (dùng Service Role Key) để bypass RLS
+    const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!, 
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
     const userId = session.metadata?.userId;
     const amount = (session.amount_total || 0) / 100;
+    const stripeSessionId = session.id;
 
-    if (userId) {
-      try {
-        // Ghi log giao dịch
-        const { error: txError } = await supabase.from("transaction").insert({
-          userId: userId, 
-          amount: amount,
-          type: "deposit",
-          status: "completed",
-          description: "Nạp tiền qua Stripe"
-        });
-        if (txError) throw txError;
+    if (!userId) {
+      console.error("❌ Webhook Error: Không tìm thấy userId trong metadata");
+      return new NextResponse("User ID missing", { status: 200 }); // Trả về 200 để Stripe không gửi lại
+    }
 
-        // Cộng tiền vào balance
-        const { error: rpcError } = await supabase.rpc("increment_balance", {
-          user_id: userId,
-          amount_to_add: amount
-        });
-        if (rpcError) throw rpcError;
+    try {
+      // --- CHỐNG TRÙNG LẶP: Kiểm tra xem giao dịch này đã xử lý chưa ---
+      const { data: existingTx } = await supabaseAdmin
+        .from("transaction")
+        .select("id")
+        .eq("stripe_session_id", stripeSessionId)
+        .single();
 
-        console.log("✨ Thành công: Đã nạp tiền cho user", userId);
-      } catch (dbError: any) {
-        console.error("❌ DB Error:", dbError.message);
-        // Trả về 500 nếu lỗi DB để Stripe gửi lại sau
-        return new NextResponse("Database update failed", { status: 500 });
+      if (existingTx) {
+        console.log("⚠️ Giao dịch đã được xử lý trước đó:", stripeSessionId);
+        return new NextResponse("Already processed", { status: 200 });
       }
+
+      // --- THỰC HIỆN GIAO DỊCH (Sử dụng RPC để đảm bảo tính nguyên tử) ---
+      // Lưu ý: Chúng ta bọc việc chèn giao dịch và cộng tiền vào một hàm DB hoặc xử lý tuần tự
+      
+      // 1. Ghi log giao dịch kèm stripe_session_id
+      const { error: txError } = await supabaseAdmin.from("transaction").insert({
+        userId: userId, 
+        amount: amount,
+        type: "deposit",
+        status: "completed",
+        description: "Nạp tiền qua Stripe",
+        stripe_session_id: stripeSessionId // Cần thêm cột này vào bảng transaction
+      });
+
+      if (txError) throw txError;
+
+      // 2. Cộng tiền vào balance
+      const { error: rpcError } = await supabaseAdmin.rpc("increment_balance", {
+        user_id: userId,
+        amount_to_add: amount
+      });
+
+      if (rpcError) throw rpcError;
+
+      console.log(`✨ Thành công: Đã nạp $${amount} cho user ${userId}`);
+
+    } catch (dbError: any) {
+      console.error("❌ DB Error:", dbError.message);
+      // Trả về 500 để Stripe tự động gửi lại (retry) nếu lỗi database tạm thời
+      return new NextResponse("Database update failed", { status: 500 });
     }
   }
 
-  // 3. QUAN TRỌNG: Luôn trả về 200 cho các event khác hoặc khi hoàn tất thành công
+  // 3. Luôn trả về 200 cho các event khác (ví dụ: payment_intent.created...)
   return new NextResponse("Success", { status: 200 });
 }

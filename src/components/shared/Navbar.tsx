@@ -65,26 +65,25 @@ export const Navbar = () => {
 
     // Cấu hình Menu
     const navLinks = {
-        GUEST: [
-            { label: "Trang chủ", href: "/" },
-            { label: "Tìm việc làm", href: "/jobs" },
-            { label: "Tìm Freelancer", href: "/talent" },
-            { label: "Hướng dẫn", href: "/guide" },
-        ],
-        FREELANCER: [
-            { label: "Tổng quan", href: "/dashboard/freelancer" },
-            { label: "Tìm việc", href: "/jobs" },
-            { label: "Việc đã apply", href: "/dashboard/freelancer/applications" },
-            { label: "Thu nhập", href: "/dashboard/freelancer/earnings" },
-        ],
-        CLIENT: [
-            { label: "Tổng quan", href: "/dashboard/client" },
-            { label: "Quản lý dự án", href: "/dashboard/client/manage-jobs" },
-            { label: "Tìm Freelancer", href: "/talent" },
-            { label: "Tài chính", href: "/dashboard/client/billing" },
-        ]
-    };
-
+    GUEST: [
+        { label: "Trang chủ", href: "/" },
+        { label: "Tìm việc làm", href: "/jobs" },
+        { label: "Tìm Freelancer", href: "/talent" },
+        { label: "Hướng dẫn", href: "/guide" },
+    ],
+    FREELANCER: [
+        { label: "Bảng điều khiển", href: "/dashboard/freelancer" },
+        { label: "Tìm việc", href: "/jobs" },
+        { label: "Việc đã apply", href: "/dashboard/freelancer/applications" },
+        { label: "Ví & Rút tiền", href: "/dashboard/freelancer/earnings" },
+    ],
+    CLIENT: [
+        { label: "Tổng quan", href: "/dashboard/client" },
+        { label: "Đăng việc mới", href: "/dashboard/client/post-job" },
+        { label: "Quản lý dự án", href: "/dashboard/client/manage-jobs" },
+        { label: "Thanh toán (Escrow)", href: "/dashboard/client/finance" },
+    ]
+};
     const activeLinks = !user ? navLinks.GUEST : (profile?.role === 'CLIENT' ? navLinks.CLIENT : navLinks.FREELANCER)
     const bgGradient = "bg-linear-to-br from-violet-600 to-cyan-500"
     const textGradient = "bg-linear-to-br from-violet-600 to-cyan-500 bg-clip-text text-transparent"

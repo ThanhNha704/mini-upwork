@@ -199,23 +199,40 @@ export async function updateJobStatus(jobId: string, status: string) {
 export async function acceptProposal(jobId: string, applicationId: string) {
   const supabase = await createClient();
 
-  // Cập nhật trạng thái ứng tuyển thành 'ACCEPTED'
-  const { error: appError } = await supabase
-    .from("application")
-    .update({ status: "ACCEPTED" })
-    .eq("id", applicationId);
+  try {
+    // 1. Lấy thông tin chi tiết ứng tuyển (để biết freelancer và số tiền bid)
+    const { data: application, error: appFetchErr } = await supabase
+      .from("application")
+      .select("*, freelancerId, bidAmount")
+      .eq("id", applicationId)
+      .single();
 
-  if (appError) return { error: appError.message };
+    if (appFetchErr || !application) throw new Error("Không tìm thấy thông tin ứng tuyển.");
 
-  // Đồng thời chuyển trạng thái Job sang 'IN_PROGRESS'
-  const { error: jobError } = await supabase
-    .from("job")
-    .update({ status: "IN_PROGRESS" })
-    .eq("id", jobId);
+    // 2. Lấy thông tin user hiện tại (Client)
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Bạn cần đăng nhập.");
 
-  revalidatePath(`/client/jobs/${jobId}`);
-  return { success: true };
+    // 3. Gọi hàm RPC để thực hiện giao dịch tài chính (Atomic Transaction)
+    const { error: rpcError } = await supabase.rpc('accept_freelancer_proposal', {
+      p_job_id: jobId,
+      p_proposal_id: applicationId,
+      p_client_id: user.id,
+      p_freelancer_id: application.freelancerId,
+      p_amount: application.bidAmount
+    });
+
+    if (rpcError) throw new Error(rpcError.message);
+
+    revalidatePath(`/dashboard/client/manage-jobs/${jobId}`);
+    return { success: true };
+
+  } catch (error: any) {
+    console.error("Accept Proposal Error:", error.message);
+    return { error: error.message };
+  }
 }
+
 // Lấy danh sách Job công khai kèm Filter & Sort
 export async function getAllJobsAction(filters: {
   query?: string;
@@ -229,7 +246,8 @@ export async function getAllJobsAction(filters: {
     .select(`
       *,
       client:users!clientId(full_name, avatar_url),
-      job_required_skills(skills(name))
+      job_required_skills(skills(name)),
+      application(freelancerId) // Thêm dòng này để lấy danh sách ID đã ứng tuyển
     `)
     .eq("status", "OPEN");
 

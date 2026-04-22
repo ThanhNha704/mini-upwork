@@ -6,8 +6,8 @@ import { createClient } from "../utils/supabase/server";
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | FreelanceHub', // %s sẽ được thay thế bởi title của trang con
-    default: 'FreelanceHub - Nền tảng Freelancer', // Tiêu đề mặc định nếu trang con không có title
+    template: '%s | FreelanceHub', 
+    default: 'FreelanceHub - Nền tảng Freelancer',
   },
   description: 'Kết nối Freelancer tài năng',
 }

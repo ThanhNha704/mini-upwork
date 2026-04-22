@@ -1,4 +1,5 @@
 import { MoveRight } from "lucide-react";
+import Link from "next/link"
 
 export const Hero = () => (
   <div className="w-full min-h-screen  text-white px-12 py-20 flex items-center justify-center">
@@ -13,11 +14,6 @@ export const Hero = () => (
           <p className="text-xl opacity-90 leading-relaxed">
             Kết nối với hàng nghìn chuyên gia tài năng sẵn sàng biến ý tưởng của bạn thành hiện thực.
           </p>
-          <div className="flex gap-4">
-            <button className="bg-white text-violet-600 px-8 py-3 rounded-full font-bold hover:bg-opacity-90 transition flex items-center gap-2">
-              Bắt đầu ngay <MoveRight size={20} />
-            </button>
-          </div>
         </div>
 
         {/* Cột bên phải: Ảnh minh họa */}

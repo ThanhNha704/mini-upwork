@@ -162,7 +162,7 @@ export default function JobDetailPage() {
                                         <>
                                             <button
                                                 onClick={() => handleAcceptFreelancer(app.id)}
-                                                className="flex-1 md:flex-none bg-gradient-to-r from-violet-600 to-cyan-500 text-white px-6 py-2.5 rounded-xl font-bold hover:opacity-90 transition-all shadow-lg shadow-blue-100 uppercase text-xs tracking-wider"
+                                                className="flex-1 md:flex-none bg-linear-to-r from-violet-600 to-cyan-500 text-white px-6 py-2.5 rounded-xl font-bold hover:opacity-90 transition-all shadow-lg shadow-blue-100 uppercase text-xs tracking-wider"
                                             >
                                                 Chấp nhận
                                             </button>

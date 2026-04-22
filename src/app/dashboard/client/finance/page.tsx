@@ -1,150 +1,170 @@
 "use client";
 
-import React, { useState } from 'react';
-import { 
-  Wallet, 
-  FileText, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
-  Plus, 
-  Search, 
-  Filter,
-  CheckCircle2,
-  Clock
-} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Wallet, ArrowUpRight, Plus, Clock, Loader2, CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { createClient } from "@/src/utils/supabase/client";
+import { getClientBillingData, createDeposit, payFreelancerAction } from '@/src/actions/financeActions';
 
-export default function BillingPage() {
-  const [activeTab, setActiveTab] = useState('transactions');
+export default function ClientBillingPage() {
+  const [data, setData] = useState<any>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{show: boolean, contract: any}>({ show: false, contract: null });
+  const [loadingPay, setLoadingPay] = useState(false);
+  
+  const supabase = createClient();
 
-  // Dữ liệu mẫu (Giả lập từ Database)
-  const balance = 1250.50;
-  const transactions = [
-    { id: 'TX-9012', type: 'payment', amount: -450, status: 'Completed', date: '2024-03-20', label: 'Thanh toán Dự án Website' },
-    { id: 'TX-9013', type: 'deposit', amount: 1000, status: 'Completed', date: '2024-03-18', label: 'Nạp tiền vào ví' },
-    { id: 'TX-9014', type: 'payment', amount: -200, status: 'Pending', date: '2024-03-15', label: 'Thanh toán Thiết kế Logo' },
-  ];
+  useEffect(() => {
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+        const res = await getClientBillingData(); 
+        setData(res);
+      }
+    };
+    init();
+  }, []);
+
+  const handleExecutePayment = async () => {
+    if (!confirmModal.contract) return;
+    setLoadingPay(true);
+    try {
+      await payFreelancerAction(confirmModal.contract.id);
+      window.location.reload(); 
+    } catch (e: any) {
+      alert(e.message);
+      setLoadingPay(false);
+      setConfirmModal({ show: false, contract: null });
+    }
+  };
+
+  if (!data) return (
+    <div className="flex h-screen w-full items-center justify-center">
+      <Loader2 className="animate-spin text-violet-600" size={40} />
+    </div>
+  );
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      {/* Header & Tổng quan */}
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Thẻ Ví tiền */}
-        <div className="flex-1 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-6 text-white shadow-lg">
-          <div className="flex justify-between items-start mb-8">
+    <div className="max-w-6xl mx-auto p-6 space-y-8 bg-gray-50 min-h-screen relative">
+      
+      {/* MODAL XÁC NHẬN TÙY CHỈNH */}
+      {confirmModal.show && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-bold backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl transform animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-start mb-6">
+              <div className="p-3 bg-amber-50 rounded-2xl text-amber-600">
+                <AlertCircle size={32} />
+              </div>
+              <button onClick={() => setConfirmModal({show: false, contract: null})} className="p-2 hover:bg-gray-100 rounded-full text-gray-400">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">Xác nhận giải ngân</h3>
+            <p className="text-slate-500 mb-6">
+              Bạn có chắc chắn muốn thanh toán <span className="font-bold text-slate-900">${confirmModal.contract?.total_amount}</span> cho dự án:
+              <br />
+              <span className="font-bold text-violet-600">"{confirmModal.contract?.job?.title || 'Đang tải...'}"</span>?
+            </p>
+
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setConfirmModal({show: false, contract: null})}
+                className="flex-1 py-4 bg-gray-100 text-gray-600 rounded-2xl font-bold hover:bg-gray-200 transition-all"
+              >
+                Hủy bỏ
+              </button>
+              <button 
+                onClick={handleExecutePayment}
+                disabled={loadingPay}
+                className="flex-1 py-4 bg-green-600 text-white rounded-2xl font-bold hover:bg-green-700 transition-all shadow-lg shadow-green-100 disabled:opacity-50"
+              >
+                {loadingPay ? "Đang xử lý..." : "Xác nhận ngay"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Card Số dư */}
+        <div className="md:col-span-1 bg-linear-to-br from-violet-600 to-cyan-500 rounded-3xl p-8 text-white shadow-2xl">
+          <div className="flex justify-between items-start mb-10">
             <div>
-              <p className="text-blue-100 text-sm font-medium">Số dư hiện tại</p>
-              <h1 className="text-3xl font-bold mt-1">${balance.toLocaleString()}</h1>
+              <p className="text-blue-100 text-sm opacity-80 font-bold uppercase tracking-widest">Số dư hiện tại</p>
+              <h1 className="text-4xl font-bold mt-2">${data.balance.toLocaleString()}</h1>
             </div>
-            <div className="bg-white/20 p-3 rounded-lg">
-              <Wallet size={24} />
-            </div>
+            <Wallet size={28} />
           </div>
-          <button className="flex items-center justify-center gap-2 w-full bg-white text-blue-600 py-3 rounded-xl font-semibold hover:bg-blue-50 transition-colors">
-            <Plus size={20} />
-            Nạp thêm tiền
-          </button>
+          <form action={createDeposit} className="space-y-3">
+            <input type="hidden" name="userId" value={userId || ''} />
+            <input name="amount" type="number" placeholder="Số tiền..." className="w-full p-4 rounded-2xl bg-white/10 text-white outline-none border border-white/20 placeholder:text-white/40 font-bold" required min="1" />
+            <button type="submit" className="w-full bg-white text-violet-600 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-white/90 transition-all shadow-lg">
+              <Plus size={20} /> Nạp tiền vào ví
+            </button>
+          </form>
         </div>
 
-        {/* Thẻ Thống kê nhanh */}
-        <div className="flex-[1.5] grid grid-cols-2 gap-4">
-          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
-            <p className="text-gray-500 text-sm">Hợp đồng đang chạy</p>
-            <div className="flex items-end justify-between mt-4">
-              <h3 className="text-2xl font-bold">04</h3>
-              <FileText className="text-blue-500" size={24} />
-            </div>
+        {/* Danh sách hợp đồng chờ giải ngân */}
+        <div className="md:col-span-2 bg-white p-8 rounded-4xl border border-slate-100 shadow-sm overflow-y-auto max-h-100">
+          <h3 className="font-bold text-slate-800 mb-6 flex items-center gap-2 uppercase text-sm tracking-widest">
+            <Clock size={18} className="text-amber-500" /> Hợp đồng chờ thanh toán
+          </h3>
+          <div className="space-y-4">
+            {data.pendingContracts.length > 0 ? data.pendingContracts.map((c: any) => (
+              <div key={c.id} className="flex justify-between items-center p-3 bg-gray-100 rounded-4xl border border-slate-100 hover:border-violet-200 transition-all group">
+                <div>
+                  <p className="text-[10px] font-bold text-violet-600 uppercase mb-1 tracking-widest">
+                    {c.job?.title || `Hợp đồng #${c.id?.slice(0, 8)}`}
+                  </p>
+                  <p className="font-bold text-slate-800 text-lg">Số tiền: ${c.total_amount}</p>
+                  <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase">ID: {c.id?.slice(0, 8)}</p>
+                </div>
+                <button 
+                  onClick={() => setConfirmModal({ show: true, contract: c })}
+                  className="px-6 py-3 bg-green-600 text-white rounded-xl text-xs font-bold hover:bg-green-700 transition-all shadow-md shadow-green-100"
+                >
+                  Giải ngân ngay
+                </button>
+              </div>
+            )) : (
+              <div className="text-center py-10">
+                <p className="text-sm text-slate-400 font-bold italic text-center">Không có hợp đồng nào chờ thanh toán.</p>
+              </div>
+            )}
           </div>
-          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
-            <p className="text-gray-500 text-sm">Tổng chi tiêu tháng này</p>
-            <div className="flex items-end justify-between mt-4">
-              <h3 className="text-2xl font-bold text-red-500">$840.00</h3>
-              <ArrowUpRight className="text-red-500" size={24} />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs Menu */}
-      <div className="border-b border-gray-200">
-        <div className="flex gap-8">
-          <button 
-            onClick={() => setActiveTab('transactions')}
-            className={`pb-4 text-sm font-medium transition-colors relative ${activeTab === 'transactions' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-          >
-            Lịch sử giao dịch
-            {activeTab === 'transactions' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600" />}
-          </button>
-          <button 
-            onClick={() => setActiveTab('contracts')}
-            className={`pb-4 text-sm font-medium transition-colors relative ${activeTab === 'contracts' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-          >
-            Hợp đồng & Hóa đơn
-            {activeTab === 'contracts' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600" />}
-          </button>
         </div>
       </div>
 
-      {/* Bảng dữ liệu */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-4 border-b border-gray-50 flex flex-wrap gap-4 justify-between items-center">
-          <div className="relative w-full max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-            <input 
-              type="text" 
-              placeholder="Tìm theo mã GD..." 
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <button className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
-            <Filter size={16} /> Lọc
-          </button>
+      {/* Bảng giao dịch */}
+      <div className="bg-white rounded-4xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="p-8 border-b border-slate-50">
+          <h3 className="font-bold text-slate-800 uppercase text-sm tracking-widest">Lịch sử giao dịch</h3>
         </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50 text-gray-600 text-xs uppercase">
-              <tr>
-                <th className="px-6 py-4">Giao dịch</th>
-                <th className="px-6 py-4">Ngày</th>
-                <th className="px-6 py-4">Số tiền</th>
-                <th className="px-6 py-4">Trạng thái</th>
-                <th className="px-6 py-4 text-right">Hành động</th>
+        <table className="w-full text-left">
+          <thead className="bg-slate-50/50 text-[10px] uppercase font-bold text-slate-400">
+            <tr>
+              <th className="px-10 py-5">Chi tiết</th>
+              <th className="px-10 py-5">Ngày</th>
+              <th className="px-10 py-5">Số tiền</th>
+              <th className="px-10 py-5">Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-50">
+            {data.transactions.map((tx: any) => (
+              <tr key={tx.id} className="text-sm hover:bg-slate-50/30 transition-colors">
+                <td className="px-10 py-5 font-bold text-slate-700">{tx.description}</td>
+                <td className="px-10 py-5 text-slate-500 font-medium">{new Date(tx.createdAt).toLocaleDateString('vi-VN')}</td>
+                <td className={`px-10 py-5 font-bold ${tx.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {tx.amount > 0 ? '+' : ''}{tx.amount}$
+                </td>
+                <td className="px-10 py-5">
+                  <span className="px-3 py-1 rounded-lg bg-green-100 text-green-700 text-[10px] font-bold uppercase">Thành công</span>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 text-sm">
-              {transactions.map((tx) => (
-                <tr key={tx.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${tx.type === 'deposit' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}`}>
-                        {tx.type === 'deposit' ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">{tx.label}</p>
-                        <p className="text-xs text-gray-500">{tx.id}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-gray-500">{tx.date}</td>
-                  <td className={`px-6 py-4 font-semibold ${tx.amount > 0 ? 'text-green-600' : 'text-gray-900'}`}>
-                    {tx.amount > 0 ? '+' : ''}{tx.amount.toLocaleString()}$
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      tx.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {tx.status === 'Completed' ? <CheckCircle2 size={12} /> : <Clock size={12} />}
-                      {tx.status === 'Completed' ? 'Thành công' : 'Chờ xử lý'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="text-blue-600 hover:underline font-medium">Chi tiết</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

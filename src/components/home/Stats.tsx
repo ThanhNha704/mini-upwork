@@ -1,26 +1,52 @@
-import { Users, CheckCircle, TrendingUp, DollarSign } from "lucide-react";
+import { Briefcase, Users, CheckCircle } from "lucide-react";
 
-const stats = [
-  { icon: Users, value: "50 nghìn+", label: "Những người làm việc tự do tích cực", color: "bg-pink-100 text-pink-600" },
-  { icon: CheckCircle, value: "200 nghìn+", label: "Công việc đã hoàn thành", color: "bg-purple-100 text-purple-600" },
-  { icon: TrendingUp, value: "98%", label: "Sự hài lòng của khách hàng", color: "bg-fuchsia-100 text-fuchsia-600" },
-  { icon: DollarSign, value: "100 triệu đô la +", label: "Tổng thu nhập", color: "bg-rose-100 text-rose-600" },
-];
+export const Stats = ({ data }: { data: any }) => {
+  const stats = [
+    { 
+      label: "Dự án đang chờ", 
+      value: data?.total_jobs || 0, 
+      icon: Briefcase, // Truyền trực tiếp Component, không dùng < />
+    },
+    { 
+      label: "Freelancers", 
+      value: data?.total_freelancers || 0, 
+      icon: Users,
+    },
+    { 
+      label: "Dự án hoàn tất", 
+      value: data?.completed_projects || 0, 
+      icon: CheckCircle,
+    },
+  ];
 
-export const Stats = () => (
-  <div className="max-w-7xl mx-auto px-6 py-12 shadow-lg rounded-lg bg-white">
-    <div className="mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
-      {stats.map((stat, index) => (
-        <div key={index} className="flex flex-col items-center text-center space-y-3">
-          <div className={`p-3 rounded-xl bg-linear-to-br from-violet-600 to-cyan-400`}>
-            <stat.icon className="w-6 h-6 text-white" />
-          </div>
-          <h3 className="text-2xl font-bold bg-linear-to-br from-violet-600 to-cyan-400 bg-clip-text text-transparent">
-            {stat.value}
-          </h3>
-          <p className="text-sm text-gray-500">{stat.label}</p>
+  return (
+    <div className="max-w-7xl mx-auto px-6 mt-12 relative z-10">
+      <div className="bg-white p-10 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-[3rem] border border-gray-50">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          {stats.map((stat, index) => {
+            const IconComponent = stat.icon; // Gán vào biến viết hoa để dùng như Component
+            
+            return (
+              <div key={index} className="flex flex-col items-center text-center group">
+                {/* Icon Box với Gradient đồng bộ Hero */}
+                <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-violet-600 to-cyan-400 flex items-center justify-center mb-6 shadow-lg shadow-violet-100 group-hover:scale-110 transition-transform duration-300">
+                  <IconComponent className="w-7 h-7 text-white" />
+                </div>
+
+                {/* Số liệu với Gradient Text */}
+                <h3 className="text-4xl font-bold bg-linear-to-br from-violet-600 to-cyan-500 bg-clip-text text-transparent tracking-tighter">
+                  {stat.value?.toLocaleString()}+
+                </h3>
+
+                {/* Label chuyên nghiệp */}
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em] mt-3">
+                  {stat.label}
+                </p>
+              </div>
+            );
+          })}
         </div>
-      ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
