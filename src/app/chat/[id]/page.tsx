@@ -20,7 +20,7 @@ export default function ChatRoom() {
             const { data: { user } } = await supabase.auth.getUser();
             setUser(user);
 
-            // 1. Lấy thông tin partner (đối phương)
+            // Lấy thông tin người nhận
             const { data: conv } = await supabase
                 .from("conversations")
                 .select(`*, client:clientId(*), freelancer:freelancerId(*)`)
@@ -31,7 +31,7 @@ export default function ChatRoom() {
                 setPartner(conv.clientId === user.id ? conv.freelancer : conv.client);
             }
 
-            // 2. Fetch tin nhắn
+            // Fetch tin nhắn
             const { data: msgs } = await supabase
                 .from("message")
                 .select("*")
@@ -111,11 +111,10 @@ export default function ChatRoom() {
                                 </div>
                             )}
 
-                            <div className={`max-w-[70%] p-3 px-4 rounded-2xl text-[13px] shadow-sm ${
-                                isMe 
-                                ? "bg-violet-600 text-white rounded-br-none" 
+                            <div className={`max-w-[70%] p-3 px-4 rounded-2xl text-[13px] shadow-sm ${isMe
+                                ? "bg-violet-600 text-white rounded-br-none"
                                 : "bg-white border border-gray-100 text-slate-800 rounded-bl-none"
-                            }`}>
+                                }`}>
                                 <div className="whitespace-pre-wrap wrap-break-word">{msg.content}</div>
                                 <p className={`text-[9px] mt-1.5 opacity-50 ${isMe ? 'text-right' : 'text-left'}`}>
                                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

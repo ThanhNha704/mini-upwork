@@ -17,7 +17,7 @@ export default function PostJob() {
 
   // States Kỹ năng
   const [searchTerm, setSearchTerm] = useState("");
-  const [allSkills, setAllSkills] = useState<any[]>([]); // Toàn bộ skill từ DB
+  const [allSkills, setAllSkills] = useState<any[]>([]); 
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<any[]>([]);
 
@@ -28,7 +28,7 @@ export default function PostJob() {
     description: "",
   });
 
-  // 1. Load danh sách skill khi component mount
+  // Load danh sách skill khi component mount
   useEffect(() => {
     async function loadSkills() {
       const skills = await fetchAllAvailableSkills(supabase);
@@ -37,7 +37,7 @@ export default function PostJob() {
     loadSkills();
   }, []);
 
-  // 2. Logic Tìm kiếm
+  // Logic Tìm kiếm
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
@@ -54,7 +54,7 @@ export default function PostJob() {
     }
   };
 
-  // 3. Thêm/Xóa kỹ năng
+  // Thêm/Xóa kỹ năng
   const addSkill = (skill: any) => {
     setSelectedSkills((prev) => [...prev, skill]);
     setSearchTerm("");

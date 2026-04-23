@@ -5,6 +5,6 @@ export const metadata: Metadata = {
   description: 'Khôi phục mật khẩu của bạn và tiếp tục hành trình làm việc tự do trên FreelanceHub',
 }
 
-export default function LoginLayout({ children }: { children: React.ReactNode }) {
+export default function ForgotPasswordLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }

@@ -1,25 +1,20 @@
-import { redirect } from "next/navigation";
 import { createClient } from "@/src/utils/supabase/server";
 import { Hero } from "@/src/components/home/Hero";
 import { Stats } from "@/src/components/home/Stats";
 import { LatestJobs } from "@/src/components/home/LatestJobs";
 import { FeaturedFreelancers } from "@/src/components/home/FeaturedFreelancers";
 
-
-// ... các import giữ nguyên
 export default async function Home() {
   const supabase = await createClient();
-  
 
-  // 1. Check Auth & Redirect (Giữ nguyên logic cũ của bạn)
+  // Check Auth & Redirect
   const { data: { user } } = await supabase.auth.getUser();
-  // ... logic redirect ...
 
-  // 2. FETCH DỮ LIỆU THỰC TẾ
+  // FETCH DỮ LIỆU THỰC TẾ
   const [counts, recentJobs, freelancers] = await Promise.all([
     supabase.rpc('get_landing_stats'),
     
-    // FETCH JOBS: Lấy 4-8 dự án mới nhất đang ở trạng thái OPEN
+    // Lấy 8 dự án mới nhất đang ở trạng thái OPEN
     supabase.from('job')
       .select(`
         *,
@@ -28,11 +23,10 @@ export default async function Home() {
       .eq('status', 'OPEN')
       .order('createdAt', { ascending: false })
       .limit(8),
-
+      //  Lấy 4 freelancer
     supabase.from('users')
       .select('full_name, avatar_url, bio, price')
       .eq('role', 'FREELANCER')
-      .not('avatar_url', 'is', null)
       .limit(4)
   ]);
 
@@ -42,12 +36,11 @@ export default async function Home() {
         <Hero />
       </section>
 
-      <div className="max-w-7xl mx-auto space-y-20 pb-20">
+      <div className="max-w-7xl mx-auto space-y-10 pb-20">
         <section className="w-full mt-12">
           <Stats data={counts.data} />
         </section>
 
-        {/* Đổi Categories thành hiển thị Jobs */}
         <section className="w-full px-6">
           <LatestJobs items={recentJobs.data || []} />
         </section>

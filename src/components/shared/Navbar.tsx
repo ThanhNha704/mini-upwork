@@ -13,25 +13,25 @@ export const Navbar = () => {
     const pathname = usePathname()
     const supabase = createClient()
 
-    // State quản lý thông tin người dùng (Giống Profile.tsx)
+    // State quản lý thông tin người dùng
     const [user, setUser] = useState<any>(null)
     const [profile, setProfile] = useState<{ full_name: string, avatar_url: string, role: string } | null>(null)
     const [isOpen, setIsOpen] = useState(false)
     const [loading, setLoading] = useState(true)
 
-    // Mỗi khi pathname thay đổi (chuyển trang), đóng menu ngay lập tức
+    // Mỗi khi pathname thay đổi, đóng menu ngay lập tức
     useEffect(() => {
         setIsOpen(false)
     }, [pathname])
 
     useEffect(() => {
         async function getAuthAndProfile() {
-            // 1. Lấy user đang đăng nhập
+            // Lấy user đang đăng nhập
             const { data: { user } } = await supabase.auth.getUser()
             setUser(user)
 
             if (user) {
-                // 2. Lấy thông tin chi tiết từ bảng users (y hệt Profile)
+                // Lấy thông tin chi tiết từ bảng users
                 const { data } = await supabase
                     .from('users')
                     .select('full_name, avatar_url, role')
@@ -45,7 +45,7 @@ export const Navbar = () => {
 
         getAuthAndProfile()
 
-        // Lắng nghe sự kiện đăng nhập/đăng xuất để cập nhật Navbar ngay lập tức
+        // Lắng nghe sự kiện đăng nhập/đăng xuất
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_OUT') {
                 setUser(null)
@@ -60,7 +60,7 @@ export const Navbar = () => {
 
     const handleLogout = async () => {
         await (await supabase).auth.signOut()
-        window.location.href = '/' // Load lại trang để xóa sạch state
+        window.location.href = '/'
     }
 
     // Cấu hình Menu
@@ -138,7 +138,7 @@ export const Navbar = () => {
                                     <p className="text-[10px] font-bold text-violet-500 mt-1 uppercase tracking-widest">{profile?.role || 'Thành viên'}</p>
                                 </div>
 
-                                {/* Avatar Link */}
+                                {/* Avatar */}
                                 <Link
                                     href={`/dashboard/${profile?.role?.toLowerCase() || 'freelancer'}/profile`}
                                     className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center hover:ring-2 hover:ring-violet-500 transition-all"

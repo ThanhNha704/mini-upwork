@@ -8,7 +8,6 @@ export default function FreelancerProfilePage() {
     const { id } = useParams();
     const router = useRouter();
     const supabase = createClient();
-
     const [freelancer, setFreelancer] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [status, setStatus] = useState("");
@@ -26,7 +25,7 @@ export default function FreelancerProfilePage() {
         })();
     }, [id, supabase]);
 
-    // LOGIC GỬI THƯ THEO CONVERSATION
+    // Gửi thư theo conversation
     const handleInvite = async (formData: FormData) => {
         setIsSending(true);
         setStatus("");
@@ -39,7 +38,7 @@ export default function FreelancerProfilePage() {
         }
 
         try {
-            // Kiểm tra/Tìm cuộc hội thoại hiện có giữa Client và Freelancer
+            // Kiểm tra/Tìm cuộc hội thoại
             let { data: conv } = await supabase
                 .from("conversations")
                 .select("id")
@@ -56,7 +55,7 @@ export default function FreelancerProfilePage() {
                     .insert({ clientId: user.id, freelancerId: id })
                     .select("id")
                     .single();
-                
+
                 if (convErr) throw convErr;
                 conversationId = newConv.id;
             }
@@ -122,14 +121,14 @@ export default function FreelancerProfilePage() {
                             placeholder="Nhập nội dung công việc..."
                             className="w-full h-32 p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 ring-violet-500 text-sm transition-all"
                         />
-                        
+
                         {status && (
                             <div className={`p-3 rounded-xl text-xs font-bold ${status.includes("Lỗi") ? "bg-red-50 text-red-500" : "bg-green-50 text-green-500"}`}>
                                 {status}
                             </div>
                         )}
 
-                        <button 
+                        <button
                             disabled={isSending}
                             className="w-full py-4 bg-linear-to-r from-violet-600 to-cyan-500 text-white rounded-2xl font-bold text-xs uppercase flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 shadow-lg shadow-violet-200"
                         >

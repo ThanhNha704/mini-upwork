@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 // lấy tất cả job của Client tạo
 export async function getClientJobs() {
   const supabase = await createClient();
-  
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
 
@@ -104,18 +104,21 @@ export async function updateJob(jobId: string, formData: any) {
 // Lấy chi tiết job
 export async function getJobDetails(jobId: string) {
   const supabase = await createClient();
-  
-  // 1. Lấy thông tin user đang đăng nhập (để check hasApplied)
+
+  // Lấy thông tin user đang đăng nhập
   const { data: { user } } = await supabase.auth.getUser();
 
-  // 2. Truy vấn lồng ghép (Join nhiều cấp)
+  // Truy vấn lồng ghép để lấy thông tin Job, Client, Skills và Kiểm tra ứng tuyển trong 1 lần gọi
   const { data, error } = await supabase
     .from("job")
     .select(`
       *,
       client:users!clientId(
-        *,
-        client_profiles(*) 
+        id,
+        full_name,
+        avatar_url,
+        email,
+        client_profiles!user_id(*) 
       ),
       skills:job_required_skills(
         skill:skills(id, name)
@@ -130,7 +133,7 @@ export async function getJobDetails(jobId: string) {
     return null;
   }
 
-  // 3. Xử lý dữ liệu thô thành cấu trúc gọn đẹp cho Frontend
+  // Xử lý dữ liệu thô thành cấu trúc gọn đẹp cho Frontend
   const formattedJob = {
     ...data,
     // Trích xuất kỹ năng thành mảng đơn giản
@@ -140,10 +143,10 @@ export async function getJobDetails(jobId: string) {
   };
 
   // Trả về object chứa đầy đủ các "mảnh ghép" dữ liệu
-  return { 
-    job: formattedJob, 
-    client: data.client, // Trong này đã có client_profiles nhờ câu select trên
-    hasApplied: formattedJob.hasApplied 
+  return {
+    job: formattedJob,
+    client: data.client,
+    hasApplied: formattedJob.hasApplied
   };
 }
 
@@ -166,7 +169,7 @@ export async function getJobProposals(jobId: string) {
 
     if (error) {
       console.error("Lỗi truy vấn Supabase:", error.message);
-      return []; 
+      return [];
     }
 
     return data || [];
@@ -182,9 +185,9 @@ export async function updateJobStatus(jobId: string, status: string) {
 
   const { error } = await supabase
     .from("job")
-    .update({ 
-      status: status, 
-      updatedAt: new Date().toISOString() 
+    .update({
+      status: status,
+      updatedAt: new Date().toISOString()
     })
     .eq("id", jobId);
 
@@ -209,11 +212,11 @@ export async function acceptProposal(jobId: string, applicationId: string) {
 
     if (appFetchErr || !application) throw new Error("Không tìm thấy thông tin ứng tuyển.");
 
-    // 2. Lấy thông tin user hiện tại (Client)
+    // Lấy thông tin user hiện tại (Client)
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Bạn cần đăng nhập.");
 
-    // 3. Gọi hàm RPC để thực hiện giao dịch tài chính (Atomic Transaction)
+    // Gọi hàm RPC để thực hiện giao dịch tài chính 
     const { error: rpcError } = await supabase.rpc('accept_freelancer_proposal', {
       p_job_id: jobId,
       p_proposal_id: applicationId,
@@ -271,6 +274,7 @@ export async function getAllJobsAction(filters: {
 // Hành động Apply cho Freelancer
 export async function applyJobAction(formData: {
   jobId: string;
+  budget: number;
   bidAmount: number;
   proposal: string;
 }) {
@@ -278,6 +282,7 @@ export async function applyJobAction(formData: {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) return { error: "Vui lòng đăng nhập để ứng tuyển" };
+  if (formData.bidAmount > formData.budget) return { error: "Báo giá không vượt quá ngân sách"}
 
   const { error } = await supabase.from("application").insert([{
     jobId: formData.jobId,
@@ -297,7 +302,7 @@ export async function applyJobAction(formData: {
 export async function completeJobAndPay(jobId: string) {
   const supabase = await createClient();
 
-  // Lấy thông tin Job và Application (Freelancer đã được chọn)
+  // Lấy thông tin Job và Freelancer
   const { data: job, error: jobErr } = await supabase
     .from("job")
     .select(`*, application!jobId(*)` )
@@ -305,14 +310,14 @@ export async function completeJobAndPay(jobId: string) {
     .eq("application.status", "ACCEPTED")
     .single();
 
-  if (jobErr || !job) return { error: "Không tìm thấy dự án hoặc ứng viên." };
+  if (jobErr || !job) return { error: "Không tìm thấy dự án hoặc ứng viên hợp lệ." };
 
   const freelancerId = job.application[0].freelancerId;
   const amount = job.budget;
   const clientId = job.clientId;
 
-  // Thực hiện giao dịch (Sử dụng RPC để đảm bảo tính toàn vẹn dữ liệu)
-  const { data, error: txError } = await supabase.rpc('handle_job_payment', {
+  // Gọi RPC giải ngân (Chuyển tiền từ Client sang Freelancer)
+  const { error: txError } = await supabase.rpc('handle_job_payment', {
     p_job_id: jobId,
     p_client_id: clientId,
     p_freelancer_id: freelancerId,
@@ -321,6 +326,20 @@ export async function completeJobAndPay(jobId: string) {
 
   if (txError) return { error: txError.message };
 
+  // CẬP NHẬT TRẠNG THÁI JOB THÀNH HOÀN THÀNH (BỔ SUNG)
+  const { error: updateJobError } = await supabase
+    .from("job")
+    .update({ 
+      status: "COMPLETED",
+      updatedAt: new Date().toISOString() 
+    })
+    .eq("id", jobId);
+
+  if (updateJobError) {
+    console.error("Lỗi cập nhật trạng thái Job:", updateJobError);
+    return { error: "Tiền đã chuyển nhưng trạng thái dự án chưa cập nhật." };
+  }
+
   revalidatePath(`/dashboard/client/manage-jobs/${jobId}`);
   return { success: true };
 }
@@ -328,7 +347,7 @@ export async function completeJobAndPay(jobId: string) {
 // Lấy danh sách việc làm mà Freelancer đã ứng tuyển
 export async function getFreelancerApplications() {
   const supabase = await createClient();
-  
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
 

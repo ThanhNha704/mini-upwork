@@ -7,9 +7,7 @@ import { revalidatePath } from "next/cache";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-/**
- * 1. NẠP TIỀN (STRIPE CHECKOUT) - Dành cho Client
- */
+// NẠP TIỀN (STRIPE CHECKOUT) - Dành cho Client
 export async function createCheckoutSession(formData: FormData) {
   const amount = Number(formData.get("amount"));
   const userId = formData.get("userId") as string;
@@ -49,11 +47,9 @@ export async function createCheckoutSession(formData: FormData) {
   redirect(sessionUrl);
 }
 
-/**
- * 2. RÚT TIỀN (STRIPE CONNECT) - Dành cho Freelancer
- */
+// RÚT TIỀN (STRIPE CONNECT) - Dành cho Freelancer
 
-// BƯỚC A: Tạo link Onboarding để Freelancer đăng ký thông tin ngân hàng với Stripe
+// Tạo link Onboarding để Freelancer đăng ký thông tin ngân hàng với Stripe
 export async function getStripeConnectLink() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -92,7 +88,7 @@ export async function getStripeConnectLink() {
   return { url: accountLink.url };
 }
 
-// BƯỚC B: Thực hiện lệnh chuyển tiền từ ví sàn sang ví Stripe Freelancer
+// Thực hiện lệnh chuyển tiền từ ví sàn sang ví Stripe Freelancer
 export async function withdrawToStripeAction(amount: number) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -109,8 +105,7 @@ export async function withdrawToStripeAction(amount: number) {
   if (userData.balance < amount) return { success: false, error: "Số dư ví hệ thống không đủ" };
 
   try {
-    // 1. Thực hiện lệnh chuyển tiền trên Stripe
-    // Lưu ý: Nếu ví Platform của bạn đang có $0, lệnh này sẽ văng lỗi Catch ngay lập tức
+    // Thực hiện lệnh chuyển tiền trên Stripe
     await stripe.transfers.create({
       amount: Math.round(amount * 100),
       currency: 'usd',
@@ -118,28 +113,26 @@ export async function withdrawToStripeAction(amount: number) {
       metadata: { userId: user.id }
     });
 
-    // 2. Trừ tiền trong bảng users
+    // Trừ tiền trong bảng users
     await supabase
       .from('users')
       .update({ balance: userData.balance - amount })
       .eq('id', user.id);
 
-    // 3. LƯU LỊCH SỬ VÀO BẢNG transaction (Đã sửa tên bảng và cột theo ảnh)
+    // LƯU LỊCH SỬ VÀO BẢNG transaction
     const { error: txError } = await supabase
-      .from('transaction') // Tên bảng là số ít theo ảnh bạn gửi
+      .from('transaction')
       .insert({
         userId: user.id,
         amount: amount,
         type: 'withdrawal',
         status: 'completed',
-        description: `Rút tiền về Stripe (ID: ${userData.stripe_connect_id.slice(-6)})`,
+        description: `Rút tiền về Stripe (ID: ${userData.stripe_connect_id})`,
         createdAt: new Date().toISOString()
       });
 
     if (txError) {
         console.error("Lỗi insert transaction:", txError.message);
-        // Không return error ở đây vì tiền đã trừ và Stripe đã chuyển, 
-        // chỉ cần log để fix bug DB sau.
     }
 
     revalidatePath('/dashboard/freelancer/earnings');

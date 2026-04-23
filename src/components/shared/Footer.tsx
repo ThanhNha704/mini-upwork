@@ -61,7 +61,7 @@ export const Footer = () => {
           ))}
         </div>
 
-        {/* Phần bản quyền phía dưới */}
+        {/* Phần bản quyền */}
         <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
           <p>© 2026 FreelanceHub. Tất cả quyền được bảo lưu.</p>
           <div className="flex items-center gap-2 hover:text-white transition cursor-pointer">

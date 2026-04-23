@@ -4,7 +4,7 @@ import Link from "next/link";
 export const LatestJobs = ({ items }: { items: any[] }) => {
   return (
     <section className="py-12">
-      <div className="flex justify-between items-end mb-10">
+      <div className="grid grid-rows-2 md:flex justify-between items-center md:items-end md:mb-10">
         <div>
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 uppercase tracking-tighter">
             Dự án mới đăng
@@ -16,37 +16,38 @@ export const LatestJobs = ({ items }: { items: any[] }) => {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="pb-10 flex overflow-y-auto md:grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         {items.length > 0 ? (
           items.map((job) => (
-            <div 
-              key={job.id} 
-              className="bg-white p-7 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col justify-between group"
+            <div
+              key={job.id}
+              className="min-w-50 bg-white p-7 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col justify-between group"
             >
               <div>
                 <div className="flex justify-between items-start mb-5">
                   <span className="px-3 py-1 bg-violet-50 text-violet-600 text-[10px] font-bold rounded-lg uppercase tracking-wider border border-violet-100">
                     Mới
                   </span>
+                  {/* Ngân sách */}
                   <div className="text-right">
                     <p className="text-xl font-bold text-slate-900 leading-none">${job.budget}</p>
                     <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">Ngân sách</p>
                   </div>
                 </div>
-
+                {/* Tên job */}
                 <h3 className="text-lg font-bold text-slate-800 line-clamp-2 mb-4 group-hover:text-violet-600 transition-colors">
                   {job.title}
                 </h3>
-
+                {/* Mô tả */}
                 <p className="text-gray-400 text-xs line-clamp-3 mb-6 italic leading-relaxed">
                   {job.description}
                 </p>
               </div>
-
-              <div className="pt-5 border-t border-slate-50 flex items-center justify-between">
+              {/* avt client */}
+              <div className="w-full pt-5 border-t border-slate-50 flex flex-col md:flex-row items-center justify-between space-y-5">
                 <div className="flex items-center gap-2">
-                  <img 
-                    src={job.client?.avatar_url || `https://ui-avatars.com/api/?name=${job.client?.full_name}`} 
+                  <img
+                    src={job.client?.avatar_url || `https://ui-avatars.com/api/?name=${job.client?.full_name}`}
                     className="w-8 h-8 rounded-xl object-cover border border-slate-100"
                     alt="client"
                   />
@@ -57,11 +58,16 @@ export const LatestJobs = ({ items }: { items: any[] }) => {
                     </p>
                   </div>
                 </div>
-                <Link 
+                <Link
                   href={`/jobs/${job.id}`}
-                  className="w-8 h-8 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:bg-violet-600 transition-colors"
+                  className="w-full md:w-8 h-8 bg-linear-to-r from-violet-600 to-cyan-500 text-white rounded-xl flex items-center justify-center hover:opacity-90"
                 >
-                  <ArrowUpRight size={14} />
+                  <span className="hidden md:flex">
+                    <ArrowUpRight size={14} />
+                  </span>
+                  <span className="text-sm md:hidden">
+                    Chi tiết
+                  </span>
                 </Link>
               </div>
             </div>

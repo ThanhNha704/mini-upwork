@@ -31,8 +31,8 @@ export default function ClientProfile() {
         budgetType: "fixed" as "hourly" | "fixed",
         preferredSkills: [] as any[],
     });
-    const bgGradient = "bg-linear-to-r from-violet-600 to-cyan-500";
 
+    const bgGradient = "bg-linear-to-r from-violet-600 to-cyan-500";
 
     useEffect(() => {
         async function initData() {
@@ -91,12 +91,11 @@ export default function ClientProfile() {
         initData();
     }, []);
 
-    // Tìm kiếm & Chọn kỹ năng
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setSearchTerm(value);
         const filtered = filterSkills(allSkills, value, data.preferredSkills);
-  setSuggestions(filtered);
+        setSuggestions(filtered);
     };
 
     const handleUpdate = async (e: React.FormEvent) => {
@@ -110,7 +109,6 @@ export default function ClientProfile() {
 
             let finalAvatarUrl = avatarUrl;
 
-            // Xử lý Upload Avatar
             if (avatarFile) {
                 const filePath = `avatars/${user.id}/${Date.now()}.png`;
                 const { error: upErr } = await supabase.storage.from("avatars").upload(filePath, avatarFile, { upsert: true });
@@ -119,7 +117,6 @@ export default function ClientProfile() {
                 finalAvatarUrl = publicUrl;
             }
 
-            // Cập nhật bảng Users
             const { error: userErr } = await supabase.from("users").update({
                 full_name: data.fullName,
                 bio: data.bio,
@@ -129,9 +126,8 @@ export default function ClientProfile() {
             }).eq("id", user.id);
             if (userErr) throw userErr;
 
-            // Cập nhật bảng client_profiles
             const { error: profileErr } = await supabase.from("client_profiles").upsert({
-                id: user.id,
+                user_id: user.id,
                 company_name: data.companyName,
                 website: data.website,
                 location: data.location,
@@ -144,7 +140,6 @@ export default function ClientProfile() {
             });
             if (profileErr) throw profileErr;
 
-            // Cập nhật Kỹ năng
             const skillIds = data.preferredSkills.map(s => s.id);
             await updateClientSkills(supabase, user.id, skillIds);
 
@@ -158,7 +153,6 @@ export default function ClientProfile() {
         }
     };
 
-    // Logic thêm/xóa skill
     const addSkill = (skill: any) => {
         if (!data.preferredSkills.find(s => s.id === skill.id)) {
             setData(prev => ({ ...prev, preferredSkills: [...prev.preferredSkills, skill] }));
@@ -171,10 +165,10 @@ export default function ClientProfile() {
         setData(prev => ({ ...prev, preferredSkills: prev.preferredSkills.filter(s => s.id !== id) }));
     };
 
-    if (loading) return <div className="p-20 text-center">Đang tải hồ sơ...</div>;
+    if (loading) return <div className="p-20 text-center text-slate-500 font-medium">Đang tải hồ sơ...</div>;
 
     return (
-        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm max-w-4xl mx-auto">
+        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm max-w-4xl mx-auto my-10">
             {message && (
                 <div className="fixed top-5 right-5 bg-emerald-500 text-white px-6 py-3 rounded-2xl shadow-lg z-50 animate-in fade-in slide-in-from-top-4">
                     {message}
@@ -211,10 +205,80 @@ export default function ClientProfile() {
                     </div>
                 </div>
 
+                {/* Industry & Company Size (Mới) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-slate-700">Lĩnh vực hoạt động</label>
+                        <input type="text" className="w-full p-4 border rounded-2xl focus:ring-2 focus:ring-violet-400 outline-none" value={data.industry} onChange={e => setData({ ...data, industry: e.target.value })} placeholder="VD: Công nghệ, Marketing..." />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-slate-700">Quy mô nhân sự</label>
+                        <select className="w-full p-4 border rounded-2xl focus:ring-2 focus:ring-violet-400 outline-none bg-white" value={data.companySize} onChange={e => setData({ ...data, companySize: e.target.value })}>
+                            <option value="">Chọn quy mô...</option>
+                            <option value="1-10">1-10 nhân viên</option>
+                            <option value="11-50">11-50 nhân viên</option>
+                            <option value="51-200">51-200 nhân viên</option>
+                            <option value="201-500">201-500 nhân viên</option>
+                            <option value="500+">Trên 500 nhân viên</option>
+                        </select>
+                    </div>
+                </div>
+
                 {/* Bio */}
                 <div className="space-y-2">
                     <label className="text-sm font-bold text-slate-700">Mô tả về công ty</label>
                     <textarea rows={4} className="w-full p-4 border rounded-2xl focus:ring-2 focus:ring-violet-400 outline-none transition" value={data.bio} onChange={e => setData({ ...data, bio: e.target.value })} placeholder="Giới thiệu ngắn gọn về lĩnh vực hoạt động của bạn..." />
+                </div>
+
+                {/* Website & Location */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-slate-700">Website</label>
+                        <input type="url" className="w-full p-4 border rounded-2xl focus:ring-2 focus:ring-violet-400 outline-none" value={data.website} onChange={e => setData({ ...data, website: e.target.value })} placeholder="https://..." />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-slate-700">Địa điểm</label>
+                        <input type="text" className="w-full p-4 border rounded-2xl focus:ring-2 focus:ring-violet-400 outline-none" value={data.location} onChange={e => setData({ ...data, location: e.target.value })} placeholder="Hà Nội, VN" />
+                    </div>
+                </div>
+
+                {/* Budget Configuration (Mới) */}
+                <div className="p-6 bg-slate-50 rounded-3xl space-y-6">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-violet-500 rounded-full"></span>
+                        Cấu hình ngân sách dự kiến
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Loại ngân sách</label>
+                            <select 
+                                className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-violet-400 outline-none bg-white" 
+                                value={data.budgetType} 
+                                onChange={e => setData({ ...data, budgetType: e.target.value as any })}
+                            >
+                                <option value="fixed">Cố định (Project)</option>
+                                <option value="hourly">Theo giờ (Hourly)</option>
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Tối thiểu ($)</label>
+                            <input 
+                                type="number" 
+                                className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-violet-400 outline-none" 
+                                value={data.budgetMin} 
+                                onChange={e => setData({ ...data, budgetMin: Number(e.target.value) })} 
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase">Tối đa ($)</label>
+                            <input 
+                                type="number" 
+                                className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-violet-400 outline-none" 
+                                value={data.budgetMax} 
+                                onChange={e => setData({ ...data, budgetMax: Number(e.target.value) })} 
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 {/* Skills Selector */}
@@ -246,18 +310,6 @@ export default function ClientProfile() {
                                 ))}
                             </div>
                         )}
-                    </div>
-                </div>
-
-                {/* Website & Location */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">Website</label>
-                        <input type="url" className="w-full p-4 border rounded-2xl focus:ring-2 focus:ring-violet-400 outline-none" value={data.website} onChange={e => setData({ ...data, website: e.target.value })} placeholder="https://..." />
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">Địa điểm</label>
-                        <input type="text" className="w-full p-4 border rounded-2xl focus:ring-2 focus:ring-violet-400 outline-none" value={data.location} onChange={e => setData({ ...data, location: e.target.value })} placeholder="Hà Nội, VN" />
                     </div>
                 </div>
 

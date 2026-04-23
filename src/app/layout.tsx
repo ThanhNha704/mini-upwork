@@ -17,9 +17,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
-  const supabase = createClient();
-
+  // const supabase = createClient();
   return (
     <html lang="en">
       <body>

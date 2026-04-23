@@ -1,12 +1,12 @@
-import { MoveRight } from "lucide-react";
-import Link from "next/link"
+// import { MoveRight } from "lucide-react";
+// import Link from "next/link"
 
 export const Hero = () => (
   <div className="w-full min-h-screen  text-white px-12 py-20 flex items-center justify-center">
     <div className="max-w-7xl mx-auto w-full">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
         
-        {/* Cột bên trái: Nội dung chữ */}
+        {/* Nội dung chữ */}
         <div className="space-y-6">
           <h1 className="text-4xl md:text-6xl font-bold leading-tight">
             Tìm kiếm Freelancer hoàn hảo cho dự án của bạn
@@ -16,7 +16,7 @@ export const Hero = () => (
           </p>
         </div>
 
-        {/* Cột bên phải: Ảnh minh họa */}
+        {/* Ảnh minh họa */}
         <div className="hidden md:block relative h-125">
           <img 
             src="https://images.unsplash.com/photo-1628763448616-5d81ad40b1fc"

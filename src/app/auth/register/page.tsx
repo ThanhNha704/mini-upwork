@@ -4,17 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/src/utils/supabase/client";
 import { verifyOtpAction } from "@/src/actions/authActions";
-import {
-  User,
-  Mail,
-  Lock,
-  Briefcase,
-  Loader2,
-  ArrowRight,
-  Eye,
-  EyeOff,
-  RefreshCw,
-} from "lucide-react";
+import { User, Mail, Lock, Briefcase, Loader2, ArrowRight, Eye, EyeOff, RefreshCw } from "lucide-react";
 import Link from "next/link";
 
 export default function RegisterPage() {
@@ -101,7 +91,7 @@ export default function RegisterPage() {
     setLoading(false);
   };
 
-  // --- HÀM GỬI LẠI OTP MỚI ---
+  // Gửi lại OTP mới
   const handleResendOtp = async () => {
     setLoading(true);
     setError("");

@@ -1,7 +1,5 @@
 "use client";
 // import { Metadata } from 'next'
-
-
 import { useEffect, useState } from "react";
 import { createClient } from "@/src/utils/supabase/client";
 import { MessageSquare } from "lucide-react";
@@ -86,7 +84,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
           </div>
         </aside>
 
-        {/* NỘI DUNG CHAT (PAGE) */}
+        {/* NỘI DUNG CHAT */}
         <main className="flex flex-col h-full bg-white overflow-hidden">
           {children}
         </main>

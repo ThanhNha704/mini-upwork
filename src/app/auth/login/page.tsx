@@ -60,7 +60,7 @@ export default function LoginPage() {
     } else if (data.user) handleRedirect(data.user);
   };
 
-  // --- HÀM GỬI LẠI OTP MỚI ---
+  // Gửi lại OTP mới
   const handleResendOtp = async () => {
     setLoading(true);
     setMessage({ text: '', isError: true });

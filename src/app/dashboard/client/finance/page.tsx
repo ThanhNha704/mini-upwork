@@ -47,7 +47,7 @@ export default function ClientBillingPage() {
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8 bg-gray-50 min-h-screen relative">
       
-      {/* MODAL XÁC NHẬN TÙY CHỈNH */}
+      {/* Modal xác nhận */}
       {confirmModal.show && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-bold backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl transform animate-in zoom-in-95 duration-200">
@@ -114,11 +114,11 @@ export default function ClientBillingPage() {
             {data.pendingContracts.length > 0 ? data.pendingContracts.map((c: any) => (
               <div key={c.id} className="flex justify-between items-center p-3 bg-gray-100 rounded-4xl border border-slate-100 hover:border-violet-200 transition-all group">
                 <div>
-                  <p className="text-[10px] font-bold text-violet-600 uppercase mb-1 tracking-widest">
+                  <p className="text-xs font-bold text-violet-600 uppercase mb-1 tracking-widest">
                     {c.job?.title || `Hợp đồng #${c.id?.slice(0, 8)}`}
                   </p>
                   <p className="font-bold text-slate-800 text-lg">Số tiền: ${c.total_amount}</p>
-                  <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase">ID: {c.id?.slice(0, 8)}</p>
+                  <p className="text-xs text-slate-400 font-bold mt-1 uppercase">ID: {c.id?.slice(0, 8)}</p>
                 </div>
                 <button 
                   onClick={() => setConfirmModal({ show: true, contract: c })}
@@ -137,35 +137,50 @@ export default function ClientBillingPage() {
       </div>
 
       {/* Bảng giao dịch */}
-      <div className="bg-white rounded-4xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="p-8 border-b border-slate-50">
-          <h3 className="font-bold text-slate-800 uppercase text-sm tracking-widest">Lịch sử giao dịch</h3>
-        </div>
-        <table className="w-full text-left">
-          <thead className="bg-slate-50/50 text-[10px] uppercase font-bold text-slate-400">
-            <tr>
-              <th className="px-10 py-5">Chi tiết</th>
-              <th className="px-10 py-5">Ngày</th>
-              <th className="px-10 py-5">Số tiền</th>
-              <th className="px-10 py-5">Trạng thái</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {data.transactions.map((tx: any) => (
-              <tr key={tx.id} className="text-sm hover:bg-slate-50/30 transition-colors">
-                <td className="px-10 py-5 font-bold text-slate-700">{tx.description}</td>
-                <td className="px-10 py-5 text-slate-500 font-medium">{new Date(tx.createdAt).toLocaleDateString('vi-VN')}</td>
-                <td className={`px-10 py-5 font-bold ${tx.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {tx.amount > 0 ? '+' : ''}{tx.amount}$
-                </td>
-                <td className="px-10 py-5">
-                  <span className="px-3 py-1 rounded-lg bg-green-100 text-green-700 text-[10px] font-bold uppercase">Thành công</span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-indigo-100/50 border border-gray-100">
+  <h2 className="text-sm font-bold text-slate-800 uppercase tracking-widest mb-8">Lịch sử giao dịch</h2>
+
+  {/* Container bao quanh bảng để tạo vùng cuộn */}
+  <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+    <table className="w-full border-collapse">
+      {/* Tiêu đề bảng - Dùng sticky để khi cuộn nó vẫn nằm trên cùng */}
+      <thead className="sticky top-0 bg-white z-10">
+        <tr className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
+          <th className="text-left pb-6 px-4">Chi tiết</th>
+          <th className="text-center pb-6 px-4">Ngày</th>
+          <th className="text-center pb-6 px-4">Số tiền</th>
+          <th className="text-right pb-6 px-4">Trạng thái</th>
+        </tr>
+      </thead>
+
+      {/* Nội dung bảng */}
+      <tbody className="divide-y divide-slate-50">
+        {data.transactions.map((tx: any) => (
+          <tr key={tx.id} className="group hover:bg-slate-50/50 transition-colors">
+            <td className="py-6 px-4">
+              <p className="text-sm font-bold text-slate-700 leading-tight">{tx.description}</p>
+            </td>
+            <td className="py-6 px-4 text-center">
+              <span className="text-xs font-medium text-slate-400">
+                {new Date(tx.createdAt).toLocaleDateString('vi-VN')}
+              </span>
+            </td>
+            <td className="py-6 px-4 text-center">
+              <span className={`text-sm font-bold ${tx.amount > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {tx.amount > 0 ? `+${tx.amount}` : tx.amount}$
+              </span>
+            </td>
+            <td className="py-6 px-4 text-right">
+              <span className="inline-flex px-3 py-1 rounded-lg bg-green-50 text-green-600 text-xs font-bold uppercase tracking-wider">
+                Thành công
+              </span>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</div>
     </div>
   );
 }

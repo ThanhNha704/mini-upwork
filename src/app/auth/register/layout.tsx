@@ -5,6 +5,6 @@ export const metadata: Metadata = {
   description: 'Tạo tài khoản mới trên FreelanceHub và bắt đầu hành trình làm việc tự do của bạn',
 }
 
-export default function LoginLayout({ children }: { children: React.ReactNode }) {
+export default function RegisterLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }

@@ -5,6 +5,6 @@ export const metadata: Metadata = {
   description: 'Tìm hiểu cách sử dụng nền tảng của chúng tôi một cách hiệu quả',
 }
 
-export default function LoginLayout({ children }: { children: React.ReactNode }) {
+export default function GuideLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }

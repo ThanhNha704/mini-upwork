@@ -8,12 +8,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 export async function POST(req: Request) {
   const body = await req.text();
   const headersList = await headers();
-  const sig = headersList.get("stripe-signature"); // Lưu ý: viết thường 'stripe-signature'
+  const sig = headersList.get("stripe-signature");
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   let event: Stripe.Event;
 
-  // 1. Xác thực Webhook từ Stripe
+  // Xác thực Webhook từ Stripe
   try {
     if (!sig || !endpointSecret) {
       console.error("❌ Thiếu signature hoặc endpoint secret");
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
-  // 2. Xử lý sự kiện nạp tiền thành công
+  // Xử lý sự kiện nạp tiền thành công
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     
@@ -41,11 +41,11 @@ export async function POST(req: Request) {
 
     if (!userId) {
       console.error("❌ Webhook Error: Không tìm thấy userId trong metadata");
-      return new NextResponse("User ID missing", { status: 200 }); // Trả về 200 để Stripe không gửi lại
+      return new NextResponse("User ID missing", { status: 200 });
     }
 
     try {
-      // --- CHỐNG TRÙNG LẶP: Kiểm tra xem giao dịch này đã xử lý chưa ---
+      // CHỐNG TRÙNG LẶP: Kiểm tra xem giao dịch này đã xử lý chưa
       const { data: existingTx } = await supabaseAdmin
         .from("transaction")
         .select("id")
@@ -56,11 +56,8 @@ export async function POST(req: Request) {
         console.log("⚠️ Giao dịch đã được xử lý trước đó:", stripeSessionId);
         return new NextResponse("Already processed", { status: 200 });
       }
-
-      // --- THỰC HIỆN GIAO DỊCH (Sử dụng RPC để đảm bảo tính nguyên tử) ---
-      // Lưu ý: Chúng ta bọc việc chèn giao dịch và cộng tiền vào một hàm DB hoặc xử lý tuần tự
       
-      // 1. Ghi log giao dịch kèm stripe_session_id
+      // Ghi log giao dịch kèm stripe_session_id
       const { error: txError } = await supabaseAdmin.from("transaction").insert({
         userId: userId, 
         amount: amount,
@@ -72,7 +69,7 @@ export async function POST(req: Request) {
 
       if (txError) throw txError;
 
-      // 2. Cộng tiền vào balance
+      // Cộng tiền vào balance
       const { error: rpcError } = await supabaseAdmin.rpc("increment_balance", {
         user_id: userId,
         amount_to_add: amount
@@ -89,6 +86,6 @@ export async function POST(req: Request) {
     }
   }
 
-  // 3. Luôn trả về 200 cho các event khác (ví dụ: payment_intent.created...)
+  // Luôn trả về 200 cho các event khác
   return new NextResponse("Success", { status: 200 });
 }

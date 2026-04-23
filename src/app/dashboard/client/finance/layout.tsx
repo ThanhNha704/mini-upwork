@@ -5,6 +5,6 @@ export const metadata: Metadata = {
   description: 'Trang theo dõi tài chính cho Client',
 }
 
-export default function LoginLayout({ children }: { children: React.ReactNode }) {
+export default function FinanceLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }

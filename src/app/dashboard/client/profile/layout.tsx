@@ -5,6 +5,6 @@ export const metadata: Metadata = {
   description: 'Xem và cập nhật thông tin hồ sơ của bạn',
 }
 
-export default function LoginLayout({ children }: { children: React.ReactNode }) {
+export default function ProfileFreelancerLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }

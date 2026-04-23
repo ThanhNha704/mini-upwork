@@ -32,7 +32,7 @@ export default function FindTalentPage() {
     );
   };
 
-  // Lấy danh sách kỹ năng từ DB khi load trang
+  // Lấy danh sách kỹ năng
   useEffect(() => {
     const fetchSkills = async () => {
       const { data, error } = await supabase
@@ -92,7 +92,7 @@ export default function FindTalentPage() {
   }, [loadData]);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] font-sans antialiased text-slate-900">
+    <div className="min-h-screen bg-white font-sans text-slate-900">
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex flex-col lg:flex-row gap-10">
 

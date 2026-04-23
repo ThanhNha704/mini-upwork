@@ -21,32 +21,30 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  // 1. Lấy thông tin user hiện tại
+  // Lấy thông tin user hiện tại
   const { data: { user } } = await supabase.auth.getUser()
   const role = user?.user_metadata?.role // Lấy role từ metadata đã lưu khi đăng ký
 
   const url = request.nextUrl.clone()
   const path = url.pathname
 
-  // 2. LOGIC CHẶN TRUY CẬP
-
-  // A. Nếu chưa đăng nhập (Guest) mà cố vào dashboard
+  // Nếu chưa đăng nhập (Guest) mà cố vào dashboard
   if (!user && path.startsWith('/dashboard')) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
   }
 
-  // B. Nếu đã đăng nhập mà cố vào lại trang login/register
+  // Nếu đã đăng nhập mà cố vào lại trang login/register
   if (user && path.startsWith('/auth')) {
-    return NextResponse.redirect(new URL('/', request.url)) // Hoặc về dashboard tương ứng
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
-  // C. Nếu đã đăng nhập mà cố vào lại trang landing page
+  // Nếu đã đăng nhập mà cố vào lại trang landing page
   const isPublicPage = url.pathname === '/';
   if (user && isPublicPage) {
-    return NextResponse.redirect(new URL(`/dashboard/${role.toLowerCase()}`, request.url)) // Hoặc về dashboard tương ứng
+    return NextResponse.redirect(new URL(`/dashboard/${role.toLowerCase()}`, request.url))
   }
 
-  // D. Chặn chéo giữa Freelancer và Client
+  // Chặn chéo giữa Freelancer và Client
   if (user) {
     if (path.startsWith('/dashboard/client') && role !== 'CLIENT') {
       return NextResponse.redirect(new URL('/dashboard/freelancer', request.url))

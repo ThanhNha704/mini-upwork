@@ -3,9 +3,7 @@
 import { createClient } from "@/src/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
-/**
- * 1. Action ứng tuyển vào công việc (Apply)
- */
+// Action ứng tuyển vào công việc (Apply)
 export async function applyJobAction(formData: {
   jobId: string;
   bidAmount: number;
@@ -29,14 +27,9 @@ export async function applyJobAction(formData: {
   return { success: true, message: "Ứng tuyển thành công!" };
 }
 
-/**
- * 2. Action giải ngân tiền từ Escrow về ví Freelancer
- * Dùng khi Client xác nhận hoàn thành công việc
- */
+// Action giải ngân tiền từ Escrow về ví Freelancer
 export async function releasePaymentAction(contractId: string, amount: number, freelancerId: string) {
   const supabase = await createClient();
-
-  // Gọi một hàm RPC trên Supabase để thực hiện transaction: 
   // Trừ tiền ở Escrow của Contract và cộng vào Balance của Freelancer
   const { error } = await supabase.rpc('handle_release_payment', {
     p_contract_id: contractId,
@@ -50,9 +43,7 @@ export async function releasePaymentAction(contractId: string, amount: number, f
   return { success: true, message: "Đã giải ngân tiền thành công." };
 }
 
-/**
- * 3. Action yêu cầu rút tiền về ngân hàng
- */
+// Action yêu cầu rút tiền về ngân hàng
 export async function requestWithdrawAction(amount: number, bankDetails: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -60,7 +51,7 @@ export async function requestWithdrawAction(amount: number, bankDetails: string)
   if (!user) return { success: false, error: "Phiên đăng nhập hết hạn." };
   if (amount <= 0) return { success: false, error: "Số tiền không hợp lệ." };
 
-  // 1. Kiểm tra số dư hiện tại
+  // Kiểm tra số dư hiện tại
   const { data: userData } = await supabase
     .from("users")
     .select("balance")
@@ -71,8 +62,7 @@ export async function requestWithdrawAction(amount: number, bankDetails: string)
     return { success: false, error: "Số dư không đủ để thực hiện giao dịch." };
   }
 
-  // 2. Thực hiện trừ tiền và tạo lệnh rút (Nên dùng RPC/Transaction để an toàn)
-  // Ở đây dùng logic đơn giản:
+  // Thực hiện trừ tiền và tạo lệnh rút (Nên dùng RPC/Transaction để an toàn)
   const { error: withdrawError } = await supabase.from('withdrawals').insert({
     user_id: user.id,
     amount: amount,
@@ -82,7 +72,7 @@ export async function requestWithdrawAction(amount: number, bankDetails: string)
 
   if (withdrawError) return { success: false, error: withdrawError.message };
 
-  // 3. Trừ số dư trong bảng users
+  // Trừ số dư trong bảng users
   await supabase
     .from("users")
     .update({ balance: userData.balance - amount })
@@ -98,27 +88,27 @@ export async function getFreelancerStats() {
 
   if (!user) return null;
 
-  // 1. Lấy số lượng đã apply
+  // Lấy số lượng đã apply
   const { count: appliedCount } = await supabase
     .from("application")
     .select("*", { count: 'exact', head: true })
     .eq("freelancerId", user.id);
 
-  // 2. Lấy số lượng đang thực hiện (Dựa trên bảng contracts)
+  // Lấy số lượng đang thực hiện (Dựa trên bảng contracts)
   const { count: inProgressCount } = await supabase
     .from("contracts")
     .select("*", { count: 'exact', head: true })
     .eq("freelancer_id", user.id)
     .eq("status", "in_progress");
 
-  // 3. Lấy số lượng đã hoàn thành
+  // Lấy số lượng đã hoàn thành
   const { count: completedCount } = await supabase
     .from("contracts")
     .select("*", { count: 'exact', head: true })
     .eq("freelancer_id", user.id)
     .eq("status", "completed");
 
-  // 4. Lấy số dư hiện tại (Tổng thu nhập khả dụng)
+  // Lấy số dư hiện tại (Tổng thu nhập khả dụng)
   const { data: userData } = await supabase
     .from("users")
     .select("balance, full_name")
